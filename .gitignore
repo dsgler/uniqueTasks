@@ -5,3 +5,5 @@ ts/test.ts
 node_modules
 
 *.yaml
+
+ts/out/
