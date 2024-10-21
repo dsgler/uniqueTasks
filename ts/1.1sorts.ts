@@ -25,6 +25,7 @@ class Heap{
         return this.flag?(a>b):(a<b);
     }
 
+    // false代表小根堆，true代表大根堆
     constructor(arr:number[],flag:boolean=false){
         this.heapList=arr;
         this.heapLen=arr.length;
@@ -61,9 +62,7 @@ class Heap{
     //将堆元素一个个弹出实现排序，之后堆就无了
     public heapSort():void{
         while (this.heapLen>=2){
-            this.swap(this.heapLen-1,0);
-            this.heapLen--;
-            this.heapDown(0);
+            this.heapPop();
         }
         this.heapLen=0;
     }
@@ -91,10 +90,18 @@ class Heap{
         this.swap(i,target);
         this.heapDown(target);
     }
+
+    public heapPop():number{
+        let res=this.heapList[0];
+        this.swap(this.heapLen-1,0);
+        this.heapLen--;
+        this.heapDown(0);
+        return res;
+    }
 }
 
 let array2 = [5, 2, 9, 1, 5, 6,7,9999,22,2,-999];
-let he=new Heap(array2,true);
+let he=new Heap(array2,false);
 // console.log(array2);
 he.heapSort();
 console.log(array2);
@@ -183,6 +190,14 @@ console.log(array4);
 // 215. 数组中的第K个最大元素 
 // https://leetcode.cn/problems/kth-largest-element-in-an-array/description/
 
-// function findKthLargest(nums: number[], k: number): number {
-    
-// };
+function findKthLargest(nums: number[], k: number): number {
+    let he=new Heap(nums,true);
+    let ans=0;
+    for (let i=0;i<k;i++){
+        ans=he.heapPop();
+    }
+    return ans;
+};
+
+let array5 = [5, 2, 9, 1, 5, 6,7,9999,22,2,-999];
+console.log(findKthLargest(array5,1));
