@@ -20,10 +20,15 @@ console.log(array);
 class Heap{
     private heapList:number[];
     private heapLen:number;
+    private flag:boolean;
+    private cmpFlag(a:number,b:number):boolean{
+        return this.flag?(a>b):(a<b);
+    }
 
-    constructor(arr:number[]){
+    constructor(arr:number[],flag:boolean=false){
         this.heapList=arr;
         this.heapLen=arr.length;
+        this.flag=flag;
         this.heapify();
     }
 
@@ -47,7 +52,7 @@ class Heap{
         }
 
         let father=Math.floor((i-1)/2);
-        if (this.heapList[i]<this.heapList[father]){
+        if (this.cmpFlag(this.heapList[i],this.heapList[father])){
             this.swap(i,father);
             this.heapUp(father);
         }
@@ -71,13 +76,13 @@ class Heap{
         if(right>=this.heapLen) right=-1;
         let target:number=-1;
 
-        if (left!==-1 && this.heapList[i]>this.heapList[left]){
-            if (right!==-1 && this.heapList[left]>this.heapList[right]){
+        if (left!==-1 && this.cmpFlag(this.heapList[left],this.heapList[i])){
+            if (right!==-1 && this.cmpFlag(this.heapList[right],this.heapList[left])){
                 target=right;
             }else{
                 target=left;
             }
-        }else if (right!==-1 && this.heapList[i]>this.heapList[right]){
+        }else if (right!==-1 && this.cmpFlag(this.heapList[right],this.heapList[i])){
             target=right;
         }
 
@@ -89,7 +94,7 @@ class Heap{
 }
 
 let array2 = [5, 2, 9, 1, 5, 6,7,9999,22,2,-999];
-let he=new Heap(array2);
+let he=new Heap(array2,true);
 // console.log(array2);
 he.heapSort();
 console.log(array2);
@@ -175,3 +180,9 @@ let help=Array(array4.length);
 mergeSort(array4,help,0,array4.length-1);
 console.log(array4);
 /* -------------------------------- */
+// 215. 数组中的第K个最大元素 
+// https://leetcode.cn/problems/kth-largest-element-in-an-array/description/
+
+// function findKthLargest(nums: number[], k: number): number {
+    
+// };
