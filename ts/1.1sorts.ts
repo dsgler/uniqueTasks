@@ -16,7 +16,7 @@ function insertionSort(arr: number[]): void {
 const array = [5, 2, 9, 1, 5, 6,7,9999,22,2,-999];
 insertionSort(array)
 console.log(array);
-
+/* -------------------------------- */
 class Heap{
     private heapList:number[];
     private heapLen:number;
@@ -93,3 +93,42 @@ let he=new Heap(array2);
 // console.log(array2);
 he.heapSort();
 console.log(array2);
+/* -------------------------------- */
+//用于获取基准数
+function getRandomInt(min:number, max:number) {
+    // min = Math.ceil(min);
+    // max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function quickSort(arr:number[],l:number,r:number):void{
+    let lRaw=l;
+    let rRaw=r;
+    if (l>=r) return;
+
+    let base=arr[getRandomInt(l,r)];
+    //l记录处理过的数，m分割小于和等于
+    let m=l;
+    while (l<=r){
+        if (arr[l]<base){
+            //将等于的分界前移
+            swap(arr,l++,m++);
+        }else if(arr[l]===base){
+            l++;
+        }else{
+            swap(arr,l,r--);
+        }
+    }
+    //左右递归处理
+    quickSort(arr,lRaw,m-1);
+    quickSort(arr,r+1,rRaw);
+}
+
+function swap(arr:number[],i:number,j:number){
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+}
+
+const array3 = [5, 2, 9, 1, 5, 6,7,9999,22,2,-999];
+quickSort(array3,0,array3.length-1);
+console.log(array3);
+/* -------------------------------- */
