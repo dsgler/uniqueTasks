@@ -1,3 +1,7 @@
 .vscode
 
 ts/test.ts
+
+node_modules
+
+*.yaml
