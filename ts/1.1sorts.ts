@@ -17,7 +17,7 @@ const array = [5, 2, 9, 1, 5, 6,7,9999,22,2,-999];
 insertionSort(array)
 console.log(array);
 
-class heap{
+class Heap{
     private heapList:number[];
     private heapLen:number;
 
@@ -27,10 +27,12 @@ class heap{
         this.heapify();
     }
 
+    //用于交换
     private swap(i:number,j:number){
         [this.heapList[i],this.heapList[j]]=[this.heapList[j],this.heapList[i]];
     }
 
+    //用于堆初始化
     public heapify():void{
         for (let process=1;process<this.heapLen;process++){
             this.heapUp(process);
@@ -38,6 +40,7 @@ class heap{
 
     }
 
+    //堆初始化的辅助函数，将新加入元素向上冒
     private heapUp(i:number):void{
         if (i===0){
             return;
@@ -50,14 +53,17 @@ class heap{
         }
     }
 
+    //将堆元素一个个弹出实现排序，之后堆就无了
     public heapSort():void{
         while (this.heapLen>=2){
             this.swap(this.heapLen-1,0);
             this.heapLen--;
             this.heapDown(0);
         }
+        this.heapLen=0;
     }
 
+    //辅助函数，逻辑判断有点麻烦
     private heapDown(i:number){
         let left=2*i+1;
         let right=left+1;
@@ -83,7 +89,7 @@ class heap{
 }
 
 const array2 = [5, 2, 9, 1, 5, 6,7,9999,22,2,-999];
-let he=new heap(array2);
+let he=new Heap(array2);
 // console.log(array2);
 he.heapSort();
 console.log(array2);
