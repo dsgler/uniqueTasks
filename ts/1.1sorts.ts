@@ -1,3 +1,4 @@
+// 稳定 O(n^2) O(1)
 function insertionSort(arr: number[]): void {
     let len=arr.length;
     //将前i位排序好
@@ -17,6 +18,7 @@ let array = [5, 2, 9, 1, 5, 6,7,9999,22,2,-999];
 insertionSort(array)
 console.log(array);
 /* -------------------------------- */
+// 无稳定 O(n log n) O(1)
 class Heap{
     private heapList:number[];
     private heapLen:number;
@@ -113,8 +115,9 @@ function getRandomInt(min:number, max:number) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-//时间和空间复杂度与递归深度有关，递归深度与选取基准有关
-//平均为O(n log n)
+// 时间和空间复杂度与递归深度有关，递归深度与选取基准有关
+// 平均为O(n log n)
+// 无稳定性
 function quickSort(arr:number[],l:number,r:number):void{
     let lRaw=l;
     let rRaw=r;
@@ -147,6 +150,7 @@ quickSort(array3,0,array3.length-1);
 console.log(array3);
 /* -------------------------------- */
 // help数组用于临时储存修改，使空间复杂度变为O(n)
+// 有稳定性
 function mergeSort(arr:number[],help:number[],l:number,r:number){
     if (l>=r) return;
 
