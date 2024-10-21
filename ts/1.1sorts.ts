@@ -13,7 +13,7 @@ function insertionSort(arr: number[]): void {
 }
 
 // 测试
-const array = [5, 2, 9, 1, 5, 6,7,9999,22,2,-999];
+let array = [5, 2, 9, 1, 5, 6,7,9999,22,2,-999];
 insertionSort(array)
 console.log(array);
 /* -------------------------------- */
@@ -88,7 +88,7 @@ class Heap{
     }
 }
 
-const array2 = [5, 2, 9, 1, 5, 6,7,9999,22,2,-999];
+let array2 = [5, 2, 9, 1, 5, 6,7,9999,22,2,-999];
 let he=new Heap(array2);
 // console.log(array2);
 he.heapSort();
@@ -101,6 +101,8 @@ function getRandomInt(min:number, max:number) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+//时间和空间复杂度与递归深度有关，递归深度与选取基准有关
+//平均为O(n log n)
 function quickSort(arr:number[],l:number,r:number):void{
     let lRaw=l;
     let rRaw=r;
@@ -128,7 +130,48 @@ function swap(arr:number[],i:number,j:number){
     [arr[i],arr[j]]=[arr[j],arr[i]];
 }
 
-const array3 = [5, 2, 9, 1, 5, 6,7,9999,22,2,-999];
+let array3 = [5, 2, 9, 1, 5, 6,7,9999,22,2,-999];
 quickSort(array3,0,array3.length-1);
 console.log(array3);
+/* -------------------------------- */
+// help数组用于临时储存修改，使空间复杂度变为O(n)
+function mergeSort(arr:number[],help:number[],l:number,r:number){
+    if (l>=r) return;
+
+    let m=Math.floor(l+(r-l)/2);
+
+    mergeSort(arr,help,l,m);
+    mergeSort(arr,help,m+1,r);
+
+    let lp=l;
+    let rp=m+1;
+    let hp=l;
+
+    while (lp <= m && rp <= r){
+        if (arr[lp]<=arr[rp]){
+            help[hp++]=arr[lp++];
+        }else{
+            help[hp++]=arr[rp++];
+        }
+    }
+
+    //善后
+    while (lp <= m){
+        help[hp++]=arr[lp++];
+    }
+    while (rp<=r){
+        help[hp++]=arr[rp++];
+    }
+
+    //回拷
+    while (l<=r){
+        arr[l]=help[l];
+        l++;
+    }
+}
+
+let array4 = [5, 2, 9, 1, 5, 6,7,9999,22,2,-999];
+let help=Array(array4.length);
+mergeSort(array4,help,0,array4.length-1);
+console.log(array4);
 /* -------------------------------- */
