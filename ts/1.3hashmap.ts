@@ -12,12 +12,13 @@ class Hashmap{
     cap:number;
     constructor(){
         this.size=0;
+        // 一个比较大的质数
         this.cap=1069;
         this.arr=new Array(this.cap);
         this.arr.fill(null);
     }
 
-    public stringToNumber(str:string):number{
+    private stringToNumber(str:string):number{
         let hashsum:number=0;
         let len=str.length;
         for (let i=0;i<len;i++){
@@ -27,7 +28,8 @@ class Hashmap{
         return hashsum % this.cap;
     }
 
-    public add(key:string,value:number){
+    // 直接调用会重复，故修改
+    private add(key:string,value:number){
         let insertNode:hashNode={key,value,next:null};
 
         let posi=this.stringToNumber(key);
@@ -44,6 +46,16 @@ class Hashmap{
         }
         cur.next=insertNode;
         this.size++;
+    }
+
+    public set(key:string,value:number){
+        let cur=this.preGet(key);
+        if (cur!=null){
+            cur.value=value;
+            return;
+        }
+
+        this.add(key,value);
     }
 
     private preGet(key:string):(hashNode | undefined){
@@ -99,11 +111,14 @@ class Hashmap{
 // console.log(666);
 let a=new Hashmap();
 
-a.add("123",888);
-a.add("456",999);
-a.add("2",9997);
-a.add("1",99981);
-a.add("5",9990);
-console.log(a.get("123"));
-console.log(a.remove("123"));
-console.log(a.get("123"));
+a.set("123",888);
+a.set("456",999);
+a.set("2",9997);
+a.set("1",99981);
+a.set("5",9990);
+a.set("5",777);
+// console.log(a.arr.length);
+console.log(a.size);
+console.log(a.get("5"));
+console.log(a.remove("5"));
+console.log(a.get("5"));
