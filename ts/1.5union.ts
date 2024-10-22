@@ -2,6 +2,7 @@
 // https://leetcode.cn/problems/number-of-provinces/
 // 最普通的 find 时优化 king
 // 时间薄纱，空间差了点，难道是因为我开了个数组记录 kings ?
+// rank优化后，空间甚至减少了一点，时间就没什么提升了
 function findCircleNum(isConnected: number[][]): number {
     let n=isConnected.length;
     let a=new Unionset(n);
@@ -27,12 +28,14 @@ class Unionset{
     kings:boolean[];
     peers:number[];
     peersCap:number;
+    rank:number[];
     constructor(n:number){
         this.len=n;
         // 开始时每个人都是自己的 king
         this.arr=Array.from({length:n},(_,k)=>k);
         this.kings=Array.from({length:n},()=>true);
         this.peers=Array(n);
+        this.rank=Array.from({length:n},()=>1);
         // this.peersCap=0;
     }
 
@@ -56,8 +59,17 @@ class Unionset{
         let king1=this.findking(i);
         let king2=this.findking(j);
         if (king1===king2) return;
-        this.kings[king1]=false;
-        this.arr[king1]=king2;
+        // this.kings[king1]=false;
+        // this.arr[king1]=king2;
+        if (this.rank[king1]>this.rank[king2]){
+            this.arr[king2]=king1;
+            this.kings[king2]=false;
+            this.rank[king1]++;
+        }else{
+            this.rank[king2]++;
+            this.arr[king1]=king2;
+            this.kings[king1]=false;
+        }
     }
 }
 
