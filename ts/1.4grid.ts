@@ -4,6 +4,7 @@
 
 // 先写dfs吧
 // 性能好像不是很好啊
+// 把record删了，原地记录，性能好了一点
 let row: number, col: number;
 
 function numIslands(grid: string[][]): number {
@@ -19,9 +20,9 @@ function numIslands(grid: string[][]): number {
   // 逐格遍历
   for (let i = 0; i < row; i++) {
     for (let j = 0; j < col; j++) {
-      if (grid[i][j] === "1" && record[i][j] == false) {
+      if (grid[i][j] === "1") {
         //console.log(`i:${i},j:${j}`);
-        bfs(i, j, record, grid);
+        dfs(i, j, grid);
         ans++;
       }
     }
@@ -29,23 +30,22 @@ function numIslands(grid: string[][]): number {
   return ans;
 }
 
-function dfs(i: number, j: number, record: boolean[][], grid: string[][]) {
+function dfs(i: number, j: number,  grid: string[][]) {
   if (
     i < 0 ||
     i >= row ||
     j < 0 ||
     j >= col ||
-    record[i][j] == true ||
     grid[i][j] === "0"
   )
     return;
 
-  record[i][j] = true;
+  grid[i][j] = "0";
 
-  dfs(i + 1, j, record, grid);
-  dfs(i - 1, j, record, grid);
-  dfs(i, j + 1, record, grid);
-  dfs(i, j - 1, record, grid);
+  dfs(i + 1, j, grid);
+  dfs(i - 1, j, grid);
+  dfs(i, j + 1, grid);
+  dfs(i, j - 1, grid);
 }
 
 let grid = [
@@ -61,6 +61,7 @@ type queueNode = {
   j: number;
 };
 
+// 性能好像差不多
 function bfs(i: number, j: number, record: boolean[][], grid: string[][]) {
   let queue: queueNode[] = [];
   let cur: queueNode = { i, j };
