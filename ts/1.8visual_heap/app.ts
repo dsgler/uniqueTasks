@@ -1,3 +1,4 @@
+// 每个矩形的类
 class rect {
   val: number;
   container: HTMLElement;
@@ -35,6 +36,7 @@ class rect {
   }
 }
 
+// heap 主类，排序在其中完成，为了 动画 函数都改成了 async 
 class Heap {
   private heapList: rect[];
   private heapLen: number;
@@ -44,6 +46,7 @@ class Heap {
     return this.flag ? a.val > b.val : a.val < b.val;
   }
 
+  // 用来等待动画
   sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
@@ -53,6 +56,7 @@ class Heap {
     this.heapList = arr;
     this.heapLen = arr.length;
     this.flag = flag;
+    // 用不同的颜色区分堆内和堆外
     for (let ele of arr) {
       ele.myDiv.classList.add("out-heap");
     }
@@ -61,7 +65,9 @@ class Heap {
 
   // 用于交换
   private async swap(i: number, j: number) {
+    // 堆上的交换
     [this.heapList[i], this.heapList[j]] = [this.heapList[j], this.heapList[i]];
+    // 矩形的交换
     this.heapList[i].exchange(this.heapList[j]);
     await this.sleep(1200);
   }
@@ -71,6 +77,7 @@ class Heap {
     this.heapList[0].myDiv.classList.remove("out-heap");
     for (let process = 1; process < this.heapLen; process++) {
         let cur=this.heapList[process];
+        // 入堆
         cur.myDiv.classList.remove("out-heap");
         await this.heapUp(process);
     }
@@ -85,20 +92,20 @@ class Heap {
     let father = Math.floor((i - 1) / 2);
     if (this.cmpFlag(this.heapList[i], this.heapList[father])) {
       await this.swap(i, father);
-      await this.heapUp(father); // 使用 await 关键字
+      await this.heapUp(father);
     }
   }
 
   // 将堆元素一个个弹出实现排序，之后堆就无了
   public async heapSort() {
     while (this.heapLen >= 2) {
-      await this.heapPop(); // 使用 await 关键字
+      await this.heapPop();
     }
     this.heapList[0].myDiv.classList.add("out-heap");
     this.heapLen = 0;
   }
 
-  // 辅助函数，逻辑判断有点麻烦
+  // 辅助函数，逻辑判断有点麻烦，要判断是否在堆内
   private async heapDown(i: number) {
     let left = 2 * i + 1;
     let right = left + 1;
@@ -125,7 +132,7 @@ class Heap {
     if (target === -1) return;
 
     await this.swap(i, target);
-    await this.heapDown(target); // 使用 await 关键字
+    await this.heapDown(target); 
   }
 
   public async heapPop(): Promise<rect | null> {
@@ -137,20 +144,23 @@ class Heap {
     await this.swap(this.heapLen - 1, 0);
     this.heapLen--;
     res.myDiv.classList.add("out-heap");
-    await this.heapDown(0); // 使用 await 关键字
+    await this.heapDown(0);
     return res;
   }
 }
 
-// let numArr=[1,2,3,4,5,6,7,8];
+// 初始化一个随机的数组
 let numArr = Array.from({ length: 31 }, () => Math.round(Math.random() * 100));
+// 一系列用于计算位置的值
 let rect_width = 50;
 let rect_height = 30;
 let rect_margin_x = 350;
 let rect_margin_y = 20;
 let top_offset_x = 500;
 let top_offset_y = 40;
+
 const container = document.getElementById("main-cantainer");
+// 返回第几次，第几个
 function get_posi(num: number): [number, number] {
   if (num < 0) return [-1, -1];
   let layer = 0;
@@ -158,7 +168,9 @@ function get_posi(num: number): [number, number] {
   return [layer, num - (2 ** layer - 1)];
 }
 
+// 将 数组 转换为 rect组
 let rectArr: rect[];
+// 改了很多遍，现在的方法是先确定最下面一层，上面的取中点
 function make_rectArr() {
   rectArr = Array(numArr.length);
   let [max_layer] = get_posi(numArr.length - 1);
@@ -204,6 +216,7 @@ function clear_rectArr() {
 }
 
 let heap_instance: Heap;
+// 输入框
 const arrtext = document.getElementById("arr-text") as HTMLInputElement;
 arrtext.value = String("[" + numArr + "]");
 function set_arr_and_init() {

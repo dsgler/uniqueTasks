@@ -1,3 +1,6 @@
+// https://leetcode.cn/problems/design-skiplist/description/
+// 1206. 设计跳表
+
 /**
  * Your Skiplist object will be instantiated and called as such:
  * var obj = new Skiplist()
@@ -7,8 +10,9 @@
  */
 type SkiplistNode={
     data:number;
+    // 记录不同层的下一个
     next:SkiplistNode[]|null;
-    // last:SkiplistNode|null;
+    // 用于处理重复的情况
     life:number;
 };
 
@@ -20,11 +24,13 @@ class Skiplist {
     end:SkiplistNode;
     path:(SkiplistNode | null)[];
 
-    makeSkiplistNode(data,height?:number):SkiplistNode{
+    makeSkiplistNode(data:number,height?:number):SkiplistNode{
+        // 层数随机确定
         height=height || this.getRandomHeight();
         return {data,next:Array(height+1),life:1};
     }
 
+    // 通过将head,end设置为最大和最小减少讨论，它们的层数最大
     constructor() {
         this.MaxHeight=16;
         this.rate=0.5;
@@ -47,14 +53,17 @@ class Skiplist {
         return false;      
     }
     
+    // 最重要的函数，返回小于或等于target的值，并记录路径在path中
     search_le(target: number):SkiplistNode{
         let cur=this.head;
         let i=this.MaxHeight;
         
+        // 逐层寻找
         for (;i>=0;i--){
             while (true){
                 let next=cur.next[i];
                 if (next.data===target){
+                    // 完善路径
                     while (i>=0){
                         this.path[i]=next;
                         i--;
@@ -82,6 +91,7 @@ class Skiplist {
 
         let newNode=this.makeSkiplistNode(num);
         for (let i=newNode.next.length-1;i>=0;i--){
+            // 这里路径记录前面的节点
             let pre=this.path[i];
             newNode.next[i]=pre.next[i];
             pre.next[i]=newNode;
@@ -98,7 +108,7 @@ class Skiplist {
             return true;
         }
 
-        // 寻找前位的path
+        // 寻找前位的path，建立前位的路径
         this.search_le(num-1);
         for (let i=cur.next.length-1;i>=0;i--){
             this.path[i].next[i]=cur.next[i];
@@ -106,6 +116,7 @@ class Skiplist {
         return true;
     }
 
+    // 调试作用
     print(n:number){
         console.group();
         let cur=this.head;
