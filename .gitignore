@@ -6,10 +6,6 @@ node_modules
 
 *.yaml
 
-<<<<<<< HEAD
-ts/out/
-=======
 ts/out/
 
 *.java
->>>>>>> e7ed3aa (broken-fix)

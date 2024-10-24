@@ -8,7 +8,8 @@
 type SkiplistNode={
     data:number;
     next:SkiplistNode[]|null;
-    last:SkiplistNode|null;
+    // last:SkiplistNode|null;
+    life:number;
 };
 
 class Skiplist {
@@ -21,7 +22,7 @@ class Skiplist {
 
     makeSkiplistNode(data,height?:number):SkiplistNode{
         height=height || this.getRandomHeight();
-        return {data,next:Array(height+1),last:null}
+        return {data,next:Array(height+1),life:1};
     }
 
     constructor() {
@@ -74,7 +75,10 @@ class Skiplist {
     add(num: number): void {
         let cur=this.search_le(num);
 
-        if (cur.data===num) return;
+        if (cur.data===num){
+            cur.life++;
+            return;
+        }
 
         let newNode=this.makeSkiplistNode(num);
         for (let i=newNode.next.length-1;i>=0;i--){
@@ -88,6 +92,11 @@ class Skiplist {
         let cur=this.search_le(num);
 
         if (cur.data!==num) return false;
+
+        if (cur.life>1){
+            cur.life--;
+            return true;
+        }
 
         // 寻找前位的path
         this.search_le(num-1);
