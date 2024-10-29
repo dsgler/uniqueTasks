@@ -16,6 +16,8 @@ export default class todoUl {
   }
 
   add(value: string) {
+    if (value=="") 
+      return;
     let li = document.createElement("li");
     li.classList.add("myli", "myrow");
     li.innerHTML = `<span class="mycheckbox"><img src="./src/选择_未选择.svg"></span>

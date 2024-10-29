@@ -46,10 +46,32 @@ body {
   background: rgba(0, 0, 0, 0.003);
 }
 
+.input-container{
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .new-todo {
+  box-sizing: border-box;
+  width: 100%;
   font-size: 1.5em;
   height: 2em;
   padding: 16px 16px 16px 60px;
+  border: none;
+  outline: none;
+}
+
+.input-container>img{
+  height: 80%;
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  display: none;
+}
+
+.input-container:hover>img{
+  display: block;
 }
 
 .new-todo:focus,

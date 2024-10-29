@@ -1,26 +1,48 @@
 import "./style.css";
 import todoUl from "./todoUl";
+import add_img from "./回车.svg";
 
 const app = document.getElementById("app")!;
 app.innerHTML = `
 <div class="app-container">
 <h1 class="myhead">MyTodos</h1>
+<div class="input-container myrow">
 <input
-class="new-todo myrow"
+class="new-todo"
 placeholder="What needs to be done?"
 autofocus=""
 />
+<img src="${add_img}">
+</div>
 <ul class="myul">
 </ul>
-</div>
-`;
-const myul=<HTMLElement>document.getElementsByClassName("myul")[0];
+</div>`;
+const myul=<HTMLElement>app.getElementsByClassName("myul")[0];
 
 let todoUl_instance=new todoUl(myul);
 window.todoUl_instance=todoUl_instance;
 
+function bind_newTodo_Enter(newTodo:HTMLInputElement){
+  newTodo.addEventListener("keydown",(event: KeyboardEvent)=>{
+    if (event.key==="Enter"){
+      event.preventDefault();
+      todoUl_instance.add(newTodo.value);
+      newTodo.value="";
+    }
+  })
+}
 
+function bind_newTodo_icon(newTodo:HTMLInputElement,newTodoIcon:HTMLImageElement){
+  newTodoIcon.addEventListener("click",()=>{
+    todoUl_instance.add(newTodo.value);
+    newTodo.value="";
+  })
+}
 
+const mynewTodo=<HTMLInputElement>app.querySelector(".new-todo")!;
+bind_newTodo_Enter(mynewTodo);
+const mynewTodoIcon=<HTMLImageElement>app.querySelector(".input-container>img")!;
+bind_newTodo_icon(mynewTodo,mynewTodoIcon);
 
 function bind_edit() {
   // document.getElementById
