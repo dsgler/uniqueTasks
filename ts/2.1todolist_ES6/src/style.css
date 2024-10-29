@@ -2,6 +2,7 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  --speed: 1s;
 }
 
 body {
@@ -46,7 +47,7 @@ body {
   background: rgba(0, 0, 0, 0.003);
 }
 
-.input-container{
+.input-container {
   position: relative;
   display: flex;
   align-items: center;
@@ -62,7 +63,7 @@ body {
   outline: none;
 }
 
-.input-container>img{
+.input-container > img {
   height: 80%;
   position: absolute;
   right: 10px;
@@ -70,12 +71,13 @@ body {
   display: none;
 }
 
-.input-container:hover>img{
+.input-container:hover > img {
   display: block;
 }
 
 .new-todo:focus,
-.editing {
+.editing,
+.focus {
   box-shadow: 0 0 2px 2px #639ffdb3;
   outline: 0;
 }
@@ -98,6 +100,7 @@ body {
   height: 2em;
   position: relative;
   margin: 5px 0px;
+  transition: all var(--speed) ease;
 }
 
 .myli > .mycheckbox {
@@ -124,6 +127,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   padding-right: 45px;
+  transition: all var(--speed) ease;
 }
 
 .myli > .mylabel > input {
@@ -160,11 +164,25 @@ body {
   display: none;
 }
 
-.myli.finished{
+.myli.finished {
   outline: #a5a8ac 2px solid;
 }
 
-.myli.finished>.mylabel{
+.myli.finished > .mylabel {
   color: gray;
   text-decoration: line-through;
+}
+
+.foot-count {
+  display: flex;
+  justify-content: space-around;
+  flex-direction: row;
+  align-items: center;
+  height: 2em;
+  line-height: 1;
+}
+
+.foot-count > span {
+  display: block;
+  cursor: pointer;
 }

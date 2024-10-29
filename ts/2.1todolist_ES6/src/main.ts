@@ -16,10 +16,16 @@ autofocus=""
 </div>
 <ul class="myul">
 </ul>
+<div class="foot-count myrow">
+<span>总任务数：<span class="total">0</span></span>
+<span>未完成：<span class="unfinish">0</span></span>
+<span>已完成：<span class="finished">0</span></span>
+</div>
 </div>`;
 const myul=<HTMLElement>app.getElementsByClassName("myul")[0];
+const myFoot:HTMLElement=app.querySelector(".foot-count")!;
 
-let todoUl_instance=new todoUl(myul);
+let todoUl_instance=new todoUl(myul,myFoot);
 window.todoUl_instance=todoUl_instance;
 
 function bind_newTodo_Enter(newTodo:HTMLInputElement){

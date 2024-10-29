@@ -1,52 +1,143 @@
 import unchecked from "./选择_未选择.svg";
 import checked from "./选择_已选择.svg";
 
-type liNode={
+type liNode = {
   li: HTMLElement;
-  isFinished:boolean;
+  isFinished: boolean;
 };
 
+type footStatusflag = "total" | "finished" | "unfinish";
+
 export default class todoUl {
-  li: liNode[];
+  li_un: liNode[];
+  li_ed:liNode[];
   myul: HTMLElement;
-  constructor(myul: HTMLElement) {
-    this.li = [];
+  myFootNum: {
+    total: HTMLElement;
+    unfinish: HTMLElement;
+    finished: HTMLElement;
+  };
+  myFootSpan: {
+    total: HTMLElement;
+    unfinish: HTMLElement;
+    finished: HTMLElement;
+  };
+  footStatus: footStatusflag;
+  constructor(myul: HTMLElement, myFoot: HTMLElement) {
+    this.li_un = [];
+    this.li_ed = [];
     this.myul = myul;
+    this.myFootNum = {
+      total: myFoot.querySelector(".total")!,
+      unfinish: myFoot.querySelector(".unfinish")!,
+      finished: myFoot.querySelector(".finished")!,
+    };
+    this.myFootSpan = {
+      total: this.myFootNum.total.parentElement!,
+      unfinish: this.myFootNum.unfinish.parentElement!,
+      finished: this.myFootNum.finished.parentElement!,
+    };
+    this.footStatus = "total";
+    this.myFootSpan[this.footStatus].classList.add("focus");
+
+    this.myFootSpan.total.addEventListener("click", () => {
+      this.bind_show("total");
+    });
+    this.myFootSpan.finished.addEventListener("click", () => {
+      this.bind_show("finished");
+    });
+    this.myFootSpan.unfinish.addEventListener("click", () => {
+      this.bind_show("unfinish");
+    });
+
     this.add("你好，世界");
   }
 
+  /**
+   * @describe 创建liNode,分别对list和DOM操作，同步
+   */
   add(value: string) {
-    if (value=="") 
-      return;
+    if (this.footStatus === "finished") {
+      this.bind_show("total");
+    }
+    if (value == "") return;
     let li = document.createElement("li");
     li.classList.add("myli", "myrow");
     li.innerHTML = `<span class="mycheckbox"><img src="./src/选择_未选择.svg"></span>
             <div class="mylabel">${value}</div>
             <button><img src="./src/删除.svg"></button>`;
 
-    let liNode:liNode={li,isFinished:false};
-    this.myul.appendChild(li);
+    let liNode: liNode = { li, isFinished: false };
+    // this.myul.appendChild(li);
     this.bind_edit(liNode);
     this.bind_finish_toggle(liNode);
     this.bind_delete(liNode);
-    this.li.push(liNode);
+    this.li_un.push(liNode);
+
+    this.bind_show();
+    this.update_foot();
   }
 
-  remove(liNode:liNode){
-    this.li.splice(this.li.indexOf(liNode),1);
+  show_append_liNode(liNode: liNode) {
+    let li = liNode.li;
+    this.myul.appendChild(li);
+  }
+
+  /**
+   * @describe 分别对list和DOM操作，不同步
+   */
+  remove(liNode: liNode) {
+    this.li_un.splice(this.li_un.indexOf(liNode), 1);
     liNode.li.remove();
+
+    this.update_foot();
   }
 
-  bind_edit(liNode:liNode) {
-    let li=liNode.li;
-    let mylabel=li.querySelector(".mylabel")!;
-    mylabel.addEventListener("dblclick", ()=> {
+  /**
+   * @describe 同步底栏数量
+   */
+  update_foot() {
+    let un=this.li_un.length;
+    let ed=this.li_ed.length;
+    this.myFootNum.total.innerHTML = String(un+ed);
+    this.myFootNum.finished.innerHTML = String(ed);
+    this.myFootNum.unfinish.innerHTML = String(un);
+  }
+
+  /**
+   * @describe 同步js列表和DOM的主要函数
+   * @param flag 显示那种，有"total" | "finished" | "unfinish"三种
+   */
+  bind_show(flag?: footStatusflag) {
+    if (flag === this.footStatus) return;
+    flag = flag || this.footStatus;
+    this.myFootSpan[this.footStatus].classList.remove("focus");
+    this.footStatus = flag;
+    this.myFootSpan[this.footStatus].classList.add("focus");
+
+    this.myul.innerHTML = "";
+    if (flag!=="finished"){
+      for (let ele of this.li_un){
+        this.show_append_liNode(ele);
+      }
+    }
+    if (flag!=="unfinish"){
+      for (let ele of this.li_ed){
+        this.show_append_liNode(ele);
+      }
+    }
+  }
+
+  bind_edit(liNode: liNode) {
+    let li = liNode.li;
+    let mylabel = li.querySelector(".mylabel")!;
+    mylabel.addEventListener("dblclick", () => {
       let oldValue: string = mylabel.innerHTML;
       mylabel.innerHTML = "";
       li.classList.add("editing");
       let editInput = document.createElement("input");
       editInput.value = oldValue;
-      editInput.addEventListener("blur", ()=> {
+      editInput.addEventListener("blur", () => {
         mylabel.innerHTML = editInput.value == "" ? oldValue : editInput.value;
         li.classList.remove("editing");
         editInput.remove();
@@ -56,41 +147,47 @@ export default class todoUl {
     });
   }
 
-  css_finished (li: HTMLElement,mycheckbox_img: HTMLImageElement){
-    // let li=this.li[index];
-    // let mycheckbox_img=<HTMLImageElement>li.querySelector(".mycheckbox>img")!;
-    mycheckbox_img.src=checked;
+  css_finished(li: HTMLElement, mycheckbox_img: HTMLImageElement) {
+    mycheckbox_img.src = checked;
     li.classList.add("finished");
   }
 
-  css_unfinished (li: HTMLElement,mycheckbox_img: HTMLImageElement){
-    // let li=this.li[index];
-    // let mycheckbox_img=<HTMLImageElement>li.querySelector(".mycheckbox>img")!;
-    mycheckbox_img.src=unchecked;
+  css_unfinished(li: HTMLElement, mycheckbox_img: HTMLImageElement) {
+    mycheckbox_img.src = unchecked;
     li.classList.remove("finished");
   }
 
-  bind_finish_toggle(liNode:liNode){
-    let li=liNode.li;
-    let mycheckbox=<HTMLImageElement>li.querySelector(".mycheckbox")!;
-    let mycheckbox_img=<HTMLImageElement>li.querySelector(".mycheckbox>img")!;
+  /**
+   * @describe 重要函数，改变每行的状态
+   */
+  bind_finish_toggle(liNode: liNode) {
+    let li = liNode.li;
+    let mycheckbox = <HTMLImageElement>li.querySelector(".mycheckbox")!;
+    let mycheckbox_img = <HTMLImageElement>li.querySelector(".mycheckbox>img")!;
 
-    mycheckbox.addEventListener("click",()=>{
-      if (liNode.isFinished===true){
-        liNode.isFinished=false;
-        this.css_unfinished(li,mycheckbox_img);
-      }else{
-        liNode.isFinished=true;
-        this.css_finished(li,mycheckbox_img);
+    mycheckbox.addEventListener("click", () => {
+      if (liNode.isFinished === true) {
+        liNode.isFinished = false;
+        this.css_unfinished(li, mycheckbox_img);
+        this.li_ed.splice(this.li_ed.indexOf(liNode), 1);
+        this.li_un.push(liNode);
+        this.bind_show();
+      } else {
+        liNode.isFinished = true;
+        this.css_finished(li, mycheckbox_img);
+        this.li_un.splice(this.li_un.indexOf(liNode), 1);
+        this.li_ed.push(liNode);
+        this.bind_show();
       }
-    })
+      this.update_foot();
+    });
   }
 
-  bind_delete(liNode:liNode){
-    let li=liNode.li;
-    let delete_button=li.querySelector("button")!;
-    delete_button.addEventListener("click",()=>{
+  bind_delete(liNode: liNode) {
+    let li = liNode.li;
+    let delete_button = li.querySelector("button")!;
+    delete_button.addEventListener("click", () => {
       this.remove(liNode);
-    })
+    });
   }
 }
