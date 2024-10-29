@@ -46,4 +46,4 @@ function fn_edit(e: Element) {
   });
 }
 
-bind_edit();
+// bind_edit();
