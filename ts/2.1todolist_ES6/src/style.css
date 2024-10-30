@@ -79,7 +79,7 @@ body {
 .editing,
 .focus {
   box-shadow: 0 0 2px 2px #639ffdb3;
-  outline: 0;
+  /* outline: 0; */
 }
 
 .myul {
@@ -185,4 +185,14 @@ body {
 .foot-count > span {
   display: block;
   cursor: pointer;
+}
+
+@media screen and (max-width: 600px) {
+  .input-container > img {
+    height: 80%;
+    position: absolute;
+    right: 10px;
+    cursor: pointer;
+    display: block;
+  }
 }

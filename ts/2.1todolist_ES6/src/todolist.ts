@@ -6,6 +6,7 @@ import {footStatusflag} from "./todoUl";
 type saveLiNode={
   val:string;
   isFinished: boolean;
+  date:Date | string |null;
 };
 
 type save_bundle={
@@ -40,6 +41,7 @@ autofocus=""
 <span>总任务数：<span class="total">0</span></span>
 <span>未完成：<span class="unfinish">0</span></span>
 <span>已完成：<span class="finished">0</span></span>
+<span class="clear">清空</span>
 </div>
 </div>`;
 
@@ -58,6 +60,10 @@ autofocus=""
     );
     this.bind_newTodo_icon(this.mynewTodo, this.mynewTodoIcon);
 
+    app.querySelector(".clear")!.addEventListener("click",()=>{
+      this.clear();
+    })
+
     // 关闭网页自动保存
     window.addEventListener('unload',()=>{this.save();});
     setInterval(()=>{this.save()},10000);
@@ -68,10 +74,10 @@ autofocus=""
     try{
       let save_bundle:save_bundle=JSON.parse(save_bundle_json!);
       for (let ele of save_bundle.li_un){
-        this.todoUl_instance.add(ele.val,false,ele.isFinished,this.todoUl_instance.li_un);
+        this.todoUl_instance.add(ele.val,false,ele.isFinished,this.todoUl_instance.li_un,ele.date===null?null:new Date(<string>ele.date));
       }
       for (let ele of save_bundle.li_ed){
-        this.todoUl_instance.add(ele.val,false,ele.isFinished,this.todoUl_instance.li_ed);
+        this.todoUl_instance.add(ele.val,false,ele.isFinished,this.todoUl_instance.li_ed,ele.date===null?null:new Date(<string>ele.date));
       }
       this.todoUl_instance.footStatus=save_bundle.footStatus;
       this.todoUl_instance.bind_show();
@@ -79,11 +85,9 @@ autofocus=""
     }catch{
       if (save_bundle_json!=null){
         alert("载入失败");
-        this.todoUl_instance.li_un.length=0;
-        this.todoUl_instance.li_ed.length=0;
-        localStorage.removeItem(`${this.app.id}_save_bundle`);
+        this.clear();
       }
-      this.todoUl_instance.add("你好，世界！",true);
+      // this.todoUl_instance.add("你好，世界！",true);
     }
   }
 
@@ -91,15 +95,22 @@ autofocus=""
     let save_liun:saveLiNode[]=[];
     let save_lied:saveLiNode[]=[];
     for (let ele of this.todoUl_instance.li_un){
-      save_liun.push({val:ele.li.querySelector(".mylabel")!.innerHTML,isFinished:ele.isFinished})
+      save_liun.push({val:ele.li.querySelector(".mylabel")!.innerHTML,isFinished:ele.isFinished,date:ele.date})
     }
     for (let ele of this.todoUl_instance.li_ed){
-      save_lied.push({val:ele.li.querySelector(".mylabel")!.innerHTML,isFinished:ele.isFinished})
+      save_lied.push({val:ele.li.querySelector(".mylabel")!.innerHTML,isFinished:ele.isFinished,date:ele.date})
     }
 
     let save_bundle:save_bundle={li_un:save_liun,li_ed:save_lied,footStatus:this.todoUl_instance.footStatus};
     let json=JSON.stringify(save_bundle);
     localStorage.setItem(`${this.app.id}_save_bundle`,json);
+  }
+
+  clear(){
+    this.todoUl_instance.li_un.length=0;
+    this.todoUl_instance.li_ed.length=0;
+    localStorage.removeItem(`${this.app.id}_save_bundle`);
+    this.todoUl_instance.add("你好，世界！",true);
   }
 
   bind_newTodo_Enter(newTodo: HTMLInputElement) {

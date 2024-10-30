@@ -5,13 +5,14 @@ import deleteIcon from "./删除.svg";
 export type liNode = {
   li: HTMLElement;
   isFinished: boolean;
+  date: Date | null;
 };
 
 export type footStatusflag = "total" | "finished" | "unfinish";
 
 export default class todoUl {
   li_un: liNode[];
-  li_ed:liNode[];
+  li_ed: liNode[];
   myul: HTMLElement;
   myFootNum: {
     total: HTMLElement;
@@ -24,6 +25,7 @@ export default class todoUl {
     finished: HTMLElement;
   };
   footStatus: footStatusflag;
+  date_re: RegExp;
   constructor(myul: HTMLElement, myFoot: HTMLElement) {
     this.li_un = [];
     this.li_ed = [];
@@ -52,6 +54,7 @@ export default class todoUl {
     });
 
     // this.add("你好，世界");
+    this.date_re = /\[(\d+):(\d+)\](.*)/
   }
 
   /**
@@ -59,25 +62,41 @@ export default class todoUl {
    * @param liwho 向哪个表里添加
    * @param is_update 是否更新显示
    */
-  add(value: string,is_update:boolean=true,isFinished:boolean=false,liwho:liNode[]=this.li_un) {
+  add(
+    value: string,
+    is_update: boolean = true,
+    isFinished: boolean = false,
+    liwho: liNode[] = this.li_un,
+    date: Date | null = null
+  ) {
     if (this.footStatus === "finished") {
       this.bind_show("total");
     }
     if (value == "") return;
+    if (date === null) {
+      let date_group = this.date_re.exec(value);
+      if (date_group !== null && date_group.length === 4) {
+        date = new Date();
+        date.setHours(Number(date_group[1]));
+        date.setMinutes(Number(date_group[2]));
+        value=`[${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}]${date_group[3]}`
+      }
+    }
     let li = document.createElement("li");
     li.classList.add("myli", "myrow");
     li.innerHTML = `<span class="mycheckbox"><img src="${unchecked}"></span>
             <div class="mylabel">${value}</div>
             <button><img src="${deleteIcon}"></button>`;
 
-    let liNode: liNode = { li, isFinished: isFinished };
+    let liNode: liNode = { li, isFinished: isFinished, date: date };
     // this.myul.appendChild(li);
     this.bind_edit(liNode);
     this.bind_finish_toggle(liNode);
     this.bind_delete(liNode);
     liwho.push(liNode);
 
-    if (is_update===true){
+    if (is_update === true) {
+      this.date_sort(this.li_un);
       this.bind_show();
       this.update_foot();
     }
@@ -102,11 +121,32 @@ export default class todoUl {
    * @describe 同步底栏数量
    */
   update_foot() {
-    let un=this.li_un.length;
-    let ed=this.li_ed.length;
-    this.myFootNum.total.innerHTML = String(un+ed);
+    let un = this.li_un.length;
+    let ed = this.li_ed.length;
+    this.myFootNum.total.innerHTML = String(un + ed);
     this.myFootNum.finished.innerHTML = String(ed);
     this.myFootNum.unfinish.innerHTML = String(un);
+  }
+
+  date_sort(liwho: liNode[]){
+    liwho.sort((a,b):number=>{
+      if (a.date===null && b.date===null){
+        return 0;
+      }
+      if (a.date===null){
+        return 1;
+      }
+      if (b.date===null){
+        return -1;
+      }
+      if (a.date<b.date){
+        return -1;
+      }else if (a.date==b.date){
+        return 0;
+      }else{
+        return 1;
+      }
+    })
   }
 
   /**
@@ -115,21 +155,21 @@ export default class todoUl {
    */
   bind_show(flag?: footStatusflag) {
     if (flag === this.footStatus) return;
-    flag = flag || this.footStatus;
+    flag = flag ?? this.footStatus;
     this.myFootSpan[this.footStatus].classList.remove("focus");
     this.footStatus = flag;
     this.myFootSpan[this.footStatus].classList.add("focus");
 
     this.myul.innerHTML = "";
-    if (flag!=="finished"){
-      for (let ele of this.li_un){
-        this.css_unfinished(ele.li,ele.li.querySelector(".mycheckbox")!)
+    if (flag !== "finished") {
+      for (let ele of this.li_un) {
+        this.css_unfinished(ele.li, ele.li.querySelector(".mycheckbox>img")!);
         this.show_append_liNode(ele);
       }
     }
-    if (flag!=="unfinish"){
-      for (let ele of this.li_ed){
-        this.css_finished(ele.li,ele.li.querySelector(".mycheckbox")!)
+    if (flag !== "unfinish") {
+      for (let ele of this.li_ed) {
+        this.css_finished(ele.li, ele.li.querySelector(".mycheckbox>img")!);
         this.show_append_liNode(ele);
       }
     }
@@ -138,7 +178,12 @@ export default class todoUl {
   bind_edit(liNode: liNode) {
     let li = liNode.li;
     let mylabel = li.querySelector(".mylabel")!;
-    mylabel.addEventListener("dblclick", () => {
+    let lastclick: number = new Date().getTime();
+    mylabel.addEventListener("click", () => {
+      if (new Date().getTime() - lastclick > 300) {
+        lastclick = new Date().getTime();
+        return;
+      }
       let oldValue: string = mylabel.innerHTML;
       mylabel.innerHTML = "";
       li.classList.add("editing");
@@ -178,6 +223,7 @@ export default class todoUl {
         this.css_unfinished(li, mycheckbox_img);
         this.li_ed.splice(this.li_ed.indexOf(liNode), 1);
         this.li_un.push(liNode);
+        this.date_sort(this.li_un);
         this.bind_show();
       } else {
         liNode.isFinished = true;
