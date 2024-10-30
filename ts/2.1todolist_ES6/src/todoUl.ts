@@ -1,12 +1,13 @@
 import unchecked from "./选择_未选择.svg";
 import checked from "./选择_已选择.svg";
+import deleteIcon from "./删除.svg";
 
-type liNode = {
+export type liNode = {
   li: HTMLElement;
   isFinished: boolean;
 };
 
-type footStatusflag = "total" | "finished" | "unfinish";
+export type footStatusflag = "total" | "finished" | "unfinish";
 
 export default class todoUl {
   li_un: liNode[];
@@ -50,32 +51,36 @@ export default class todoUl {
       this.bind_show("unfinish");
     });
 
-    this.add("你好，世界");
+    // this.add("你好，世界");
   }
 
   /**
-   * @describe 创建liNode,分别对list和DOM操作，同步
+   * @describe 创建liNode,完成对list和DOM操作
+   * @param liwho 向哪个表里添加
+   * @param is_update 是否更新显示
    */
-  add(value: string) {
+  add(value: string,is_update:boolean=true,isFinished:boolean=false,liwho:liNode[]=this.li_un) {
     if (this.footStatus === "finished") {
       this.bind_show("total");
     }
     if (value == "") return;
     let li = document.createElement("li");
     li.classList.add("myli", "myrow");
-    li.innerHTML = `<span class="mycheckbox"><img src="./src/选择_未选择.svg"></span>
+    li.innerHTML = `<span class="mycheckbox"><img src="${unchecked}"></span>
             <div class="mylabel">${value}</div>
-            <button><img src="./src/删除.svg"></button>`;
+            <button><img src="${deleteIcon}"></button>`;
 
-    let liNode: liNode = { li, isFinished: false };
+    let liNode: liNode = { li, isFinished: isFinished };
     // this.myul.appendChild(li);
     this.bind_edit(liNode);
     this.bind_finish_toggle(liNode);
     this.bind_delete(liNode);
-    this.li_un.push(liNode);
+    liwho.push(liNode);
 
-    this.bind_show();
-    this.update_foot();
+    if (is_update===true){
+      this.bind_show();
+      this.update_foot();
+    }
   }
 
   show_append_liNode(liNode: liNode) {
@@ -118,11 +123,13 @@ export default class todoUl {
     this.myul.innerHTML = "";
     if (flag!=="finished"){
       for (let ele of this.li_un){
+        this.css_unfinished(ele.li,ele.li.querySelector(".mycheckbox")!)
         this.show_append_liNode(ele);
       }
     }
     if (flag!=="unfinish"){
       for (let ele of this.li_ed){
+        this.css_finished(ele.li,ele.li.querySelector(".mycheckbox")!)
         this.show_append_liNode(ele);
       }
     }

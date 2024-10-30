@@ -1,6 +1,18 @@
 import "./style.css";
 import todoUl from "./todoUl";
 import add_img from "./回车.svg";
+import {footStatusflag} from "./todoUl";
+
+type saveLiNode={
+  val:string;
+  isFinished: boolean;
+};
+
+type save_bundle={
+  li_un:saveLiNode[];
+  li_ed:saveLiNode[];
+  footStatus: footStatusflag;
+};
 
 export default class todolist {
   app: HTMLElement;
@@ -35,13 +47,59 @@ autofocus=""
     this.myFoot = app.querySelector(".foot-count")!;
     // debugger;
     this.todoUl_instance = new todoUl(this.myul, this.myFoot);
+    // 尝试恢复历史
+    this.recovery();
 
+    // 绑定一些东西
     this.mynewTodo = <HTMLInputElement>app.querySelector(".new-todo")!;
     this.bind_newTodo_Enter(this.mynewTodo);
     this.mynewTodoIcon = <HTMLImageElement>(
       app.querySelector(".input-container>img")!
     );
     this.bind_newTodo_icon(this.mynewTodo, this.mynewTodoIcon);
+
+    // 关闭网页自动保存
+    window.addEventListener('unload',()=>{this.save();});
+    setInterval(()=>{this.save()},10000);
+  }
+
+  recovery(){
+    let save_bundle_json=localStorage.getItem(`${this.app.id}_save_bundle`);
+    try{
+      let save_bundle:save_bundle=JSON.parse(save_bundle_json!);
+      for (let ele of save_bundle.li_un){
+        this.todoUl_instance.add(ele.val,false,ele.isFinished,this.todoUl_instance.li_un);
+      }
+      for (let ele of save_bundle.li_ed){
+        this.todoUl_instance.add(ele.val,false,ele.isFinished,this.todoUl_instance.li_ed);
+      }
+      this.todoUl_instance.footStatus=save_bundle.footStatus;
+      this.todoUl_instance.bind_show();
+      this.todoUl_instance.update_foot();
+    }catch{
+      if (save_bundle_json!=null){
+        alert("载入失败");
+        this.todoUl_instance.li_un.length=0;
+        this.todoUl_instance.li_ed.length=0;
+        localStorage.removeItem(`${this.app.id}_save_bundle`);
+      }
+      this.todoUl_instance.add("你好，世界！",true);
+    }
+  }
+
+  save(){
+    let save_liun:saveLiNode[]=[];
+    let save_lied:saveLiNode[]=[];
+    for (let ele of this.todoUl_instance.li_un){
+      save_liun.push({val:ele.li.querySelector(".mylabel")!.innerHTML,isFinished:ele.isFinished})
+    }
+    for (let ele of this.todoUl_instance.li_ed){
+      save_lied.push({val:ele.li.querySelector(".mylabel")!.innerHTML,isFinished:ele.isFinished})
+    }
+
+    let save_bundle:save_bundle={li_un:save_liun,li_ed:save_lied,footStatus:this.todoUl_instance.footStatus};
+    let json=JSON.stringify(save_bundle);
+    localStorage.setItem(`${this.app.id}_save_bundle`,json);
   }
 
   bind_newTodo_Enter(newTodo: HTMLInputElement) {
