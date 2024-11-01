@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ul_item from "./ul_item.vue";
+import type { footStatusflag } from "./myfoot.vue"
 
 export type liNode = {
   value: string;
@@ -7,14 +8,31 @@ export type liNode = {
   isEditing: boolean;
 };
 
-const { liArr } = defineProps<{
-  liArr: { value: string; isFinished: boolean; isEditing: boolean; }[];
+const { li_un, li_ed } = defineProps<{
+  li_un: liNode[];
+  li_ed: liNode[];
+  footStatus: footStatusflag;
 }>();
+
+const emit = defineEmits<{
+  remove_item: [index: number, isFinished: boolean];
+  finish_toggle: [index: number, isFinished: boolean];
+}>();
+
 </script>
 
 <template>
   <ul class="myul">
-    <ul_item v-for="(item, index) in liArr" :liNode="item" :index="index" />
+    <template v-if="footStatus !== 'finished'">
+      <ul_item v-for="(item, index) in li_un" :key="item.value" :liNode="item" :index="index"
+        @remove_item="(index: number, isFinished: boolean) => { $emit('remove_item', index, isFinished) }"
+        @finish_toggle="(index: number, isFinished: boolean) => { $emit('finish_toggle', index, isFinished) }" />
+    </template>
+    <template v-if="footStatus !== 'unfinish'">
+      <ul_item v-for="(item, index) in li_ed" :key="item.value" :liNode="item" :index="index"
+        @remove_item="(index: number, isFinished: boolean) => { $emit('remove_item', index, isFinished) }"
+        @finish_toggle="(index: number, isFinished: boolean) => { $emit('finish_toggle', index, isFinished) }" />
+    </template>
   </ul>
 </template>
 

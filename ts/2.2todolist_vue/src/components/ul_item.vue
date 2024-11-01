@@ -2,7 +2,7 @@
 import unchecked from "../assets/选择_未选择.svg";
 import checked from "../assets/选择_已选择.svg";
 import deleteIcon from "../assets/删除.svg";
-import { computed } from "vue";
+import { computed, ref, type Ref, nextTick } from "vue";
 import type { liNode } from "./ul.vue";
 
 const props = defineProps<{
@@ -11,30 +11,63 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  remove_item: [index: number];
-  finish_toggle: [index: number];
+  remove_item: [index: number, isFinished: boolean];
+  finish_toggle: [index: number, isFinished: boolean];
 }>();
+
+let isEditing: Ref<boolean> = ref(false);
 
 const classObj = computed(() => ({
   myli: true,
   myrow: true,
   finished: props.liNode.isFinished,
-  editing: props.liNode.isEditing,
+  editing: isEditing.value,
 }));
 
+
 function remove_item_handler() {
-  emit("remove_item", props.index);
+  emit("remove_item", props.index, props.liNode.isFinished);
 }
 
 function finish_toggle_handler() {
-  emit("finish_toggle", props.index);
+  emit("finish_toggle", props.index, props.liNode.isFinished);
 }
+
+let touch_time = Date.now();
+let old: string;
+async function touch_handler() {
+  let now = Date.now();
+  if (now - touch_time > 300) {
+    touch_time = Date.now();
+    return;
+  }
+  old = props.liNode.value;
+  isEditing.value = true;
+  await nextTick();
+  // debugger;
+  // console.log(inp.value);
+  inp.value.focus();
+}
+
+let inp = ref();
+function blur_editor() {
+  if (props.liNode.value === "") {
+    props.liNode.value = old;
+  }
+  isEditing.value = false;
+  debugger;
+}
+
 </script>
 
 <template>
-  <li class="myli myrow">
+  <li :class="classObj">
     <span class="mycheckbox" @click="finish_toggle_handler"><img :src="liNode.isFinished ? checked : unchecked"></span>
-    <div class="mylabel">{{ liNode.value }}</div>
+    <div class="mylabel" @click="touch_handler">
+      <input v-if="isEditing" @blur="blur_editor" v-model.lazy="liNode.value" ref="inp">{{
+        isEditing ? " " :
+          liNode.value }}
+    </div>
     <button @click="remove_item_handler"><img :src="deleteIcon"></button>
   </li>
 </template>
