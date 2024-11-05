@@ -140,11 +140,14 @@ class myPromise implements thenable {
   // 这合理吗？ 要是我就想返回一个obj怎么办
   // 有then但then不是函数就正常返回，没then就报错？
   // 什么promise怪谈
+  let isCalled=false;
   if ((typeof valueX === "object" && valueX != null) || typeof valueX === "function") {
     try{
       let then=(<thenable>valueX).then;
       if (typeof then==="function"){
         then.call(valueX,(valueY)=>{
+          if (isCalled) return;
+          isCalled=true;
           myPromise.resolvePromise(superPromise,valueY,superResolve,superReject)
         },(err)=>{
           superReject(err);
