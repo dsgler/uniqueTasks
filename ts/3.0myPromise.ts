@@ -21,7 +21,6 @@ let thenable = {
   },
 };
 
-
 class myPromise implements thenable {
   status: myPromiseStatus;
   value: any;
@@ -43,12 +42,15 @@ class myPromise implements thenable {
   }
 
   resolve(value: any) {
+    if (this.status !== "pending") return;
     this.value = value;
     this.status = "fulfilled";
+    // value在func函数里自己会通过this获取，不需要传递
     this.onResolvedCallbacks.forEach((func) => func());
   }
 
   reject(reason: any) {
+    if (this.status !== "pending") return;
     this.reason = reason;
     this.status = "rejected";
     this.onRejectedCallbacks.forEach((func) => func());
@@ -62,8 +64,8 @@ class myPromise implements thenable {
     onRejected =
       typeof onRejected === "function"
         ? onRejected
-        : (err) => {
-            throw err;
+        : (reason) => {
+            throw reason;
           };
 
     // 这里的this是上一个promise
@@ -80,8 +82,8 @@ class myPromise implements thenable {
       } else if (this.status === "rejected") {
         setTimeout(() => {
           try {
-            let result = onRejected(this.reason);
-            myPromise.resolvePromise(newPromise, result, resolve, reject);
+            let reason = onRejected(this.reason);
+            myPromise.resolvePromise(newPromise, reason, resolve, reject);
           } catch (e) {
             reject(e);
           }
@@ -90,6 +92,7 @@ class myPromise implements thenable {
         this.onResolvedCallbacks.push(() => {
           setTimeout(() => {
             try {
+              // this指向当前的promise，所以执行时不需要传入value
               let result = onFulfilled(this.value);
               myPromise.resolvePromise(newPromise, result, resolve, reject);
             } catch (e) {
@@ -116,34 +119,47 @@ class myPromise implements thenable {
 
   /**
    * @describe 递归解决then的返回值的多种可能
-   * @param result 可能是thenable,那么就递归解决; 直接值，就包装后返回
+   * @param valueX 可能是thenable,那么就递归解决; 直接值，就包装后返回
    * @returns
    */
   static resolvePromise(
     superPromise: myPromise,
-    result,
+    valueX,
     superResolve,
     superReject
   ) {
-    // 已经解决的不能再改变
-    if (superPromise.status !== "pending") {
-      return;
+    // 父过程都结束了还要子Promise干嘛
+    if (superPromise.status!=="pending") return;
+    if (superPromise === valueX) {
+      return superReject(
+        new TypeError("Chaining cycle detected for promise #<Promise>")
+      );
     }
 
-    if (superPromise === result) {
-      superReject(TypeError("不能等待自己"));
-      return;
+  // 只要返回的时obj或者是func就默认是promise了
+  // 这合理吗？ 要是我就想返回一个obj怎么办
+  // 有then但then不是函数就正常返回，没then就报错？
+  // 什么promise怪谈
+  if (typeof valueX.then === "function"){
+    try{
+      let then=(<thenable>valueX).then;
+      then.call(valueX,(valueY)=>{
+        myPromise.resolvePromise(superPromise,valueY,superResolve,superReject)
+      },(err)=>{
+        superReject(err);
+      })
+    }catch(e){
+      superReject(e);
     }
+  }else{
+    try{
+      superResolve(valueX);
+    }catch(e){
+      superReject(e);
+    }
+  }
 
-    if (typeof result.then === "function") {
-      try {
-        (<thenable>result).then.call(result, superResolve, superReject);
-      } catch (e) {
-        superReject(e);
-      }
-    } else {
-      superResolve(result);
-    }
+
   }
 
   static resolve(value?) {
@@ -162,17 +178,17 @@ class myPromise implements thenable {
     return new myPromise((resolve, reject) => reject(reason));
   }
 
-  static deferred(){
-    let ret:any={};
-    ret.promise=new myPromise((resolve,reject)=>{
-      ret.resolve=resolve;
-      ret.reject=reject;
-    })
+  // 测试要求
+  static deferred() {
+    let ret: any = {};
+    ret.promise = new myPromise((resolve, reject) => {
+      ret.resolve = resolve;
+      ret.reject = reject;
+    });
     return ret;
   }
 }
 
-// export const deferred=myPromise.deferred;
 module.exports = myPromise;
 
 // let aaa = myPromise.resolve(thenable);
