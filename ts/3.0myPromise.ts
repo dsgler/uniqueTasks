@@ -21,6 +21,7 @@ let thenable = {
   },
 };
 
+
 class myPromise implements thenable {
   status: myPromiseStatus;
   value: any;
@@ -54,8 +55,10 @@ class myPromise implements thenable {
   }
 
   then(onFulfilled, onRejected?): myPromise {
+    // 当不是函数时，保持原来的value
     onFulfilled =
       typeof onFulfilled === "function" ? onFulfilled : (value: any) => value;
+    // 当不是函数时，保持原来的reason
     onRejected =
       typeof onRejected === "function"
         ? onRejected
@@ -63,12 +66,13 @@ class myPromise implements thenable {
             throw err;
           };
 
+    // 这里的this是上一个promise
     let newPromise = new myPromise((resolve, reject) => {
       if (this.status === "fulfilled") {
         setTimeout(() => {
           try {
             let result = onFulfilled(this.value);
-            myPromise.recrusionPromise(newPromise, result, resolve, reject);
+            myPromise.resolvePromise(newPromise, result, resolve, reject);
           } catch (e) {
             reject(e);
           }
@@ -77,7 +81,7 @@ class myPromise implements thenable {
         setTimeout(() => {
           try {
             let result = onRejected(this.reason);
-            myPromise.recrusionPromise(newPromise, result, resolve, reject);
+            myPromise.resolvePromise(newPromise, result, resolve, reject);
           } catch (e) {
             reject(e);
           }
@@ -87,7 +91,7 @@ class myPromise implements thenable {
           setTimeout(() => {
             try {
               let result = onFulfilled(this.value);
-              myPromise.recrusionPromise(newPromise, result, resolve, reject);
+              myPromise.resolvePromise(newPromise, result, resolve, reject);
             } catch (e) {
               reject(e);
             }
@@ -98,7 +102,7 @@ class myPromise implements thenable {
           setTimeout(() => {
             try {
               let result = onRejected(this.reason);
-              myPromise.recrusionPromise(newPromise, result, resolve, reject);
+              myPromise.resolvePromise(newPromise, result, resolve, reject);
             } catch (e) {
               reject(e);
             }
@@ -115,7 +119,7 @@ class myPromise implements thenable {
    * @param result 可能是thenable,那么就递归解决; 直接值，就包装后返回
    * @returns
    */
-  static recrusionPromise(
+  static resolvePromise(
     superPromise: myPromise,
     result,
     superResolve,
@@ -131,26 +135,6 @@ class myPromise implements thenable {
       return;
     }
 
-    // if (result instanceof myPromise){
-    //   switch (result.status){
-    //     case "fulfilled":
-    //       myPromise.recrusionPromise(superPromise,result.value,superResolve,superReject);
-    //       break;
-    //     case "rejected":
-    //       myPromise.recrusionPromise(superPromise,result.reason,superResolve,superReject);
-    //       break;
-    //     case "pending":
-    //       result.resolve=(value)=>{
-    //         result.resolve.call(result,value);
-    //         console.log("修改resolve")
-    //         superResolve(value);
-    //       }
-    //       result.reject=(reason)=>{
-    //         result.reject.call(result,reason);
-    //         superReject(reason);
-    //       }
-    //   }
-    // }else
     if (typeof result.then === "function") {
       try {
         (<thenable>result).then.call(result, superResolve, superReject);
@@ -162,7 +146,7 @@ class myPromise implements thenable {
     }
   }
 
-  static resolve(value) {
+  static resolve(value?) {
     if (value instanceof myPromise) {
       return value;
     }
@@ -173,21 +157,37 @@ class myPromise implements thenable {
 
     return new myPromise((resolve) => resolve(value));
   }
+
+  static reject(reason) {
+    return new myPromise((resolve, reject) => reject(reason));
+  }
+
+  static deferred(){
+    let ret:any={};
+    ret.promise=new myPromise((resolve,reject)=>{
+      ret.resolve=resolve;
+      ret.reject=reject;
+    })
+    return ret;
+  }
 }
 
-let aaa = myPromise.resolve(thenable);
-aaa = aaa.then((data) => {
-  console.log(data);
-  return new myPromise((resolve) => {
-    setTimeout(() => {
-      resolve("inner");
-    }, 2000);
-  });
-});
-aaa=aaa.then((data) => {
-  console.log(data);
-  return thenable
-});
-aaa.then((data)=>{
-  console.log(data)
-})
+// export const deferred=myPromise.deferred;
+module.exports = myPromise;
+
+// let aaa = myPromise.resolve(thenable);
+// aaa = aaa.then((data) => {
+//   console.log(data);
+//   return new myPromise((resolve) => {
+//     setTimeout(() => {
+//       resolve("inner");
+//     }, 2000);
+//   });
+// });
+// aaa = aaa.then((data) => {
+//   console.log(data);
+//   return thenable;
+// });
+// aaa.then((data) => {
+//   console.log(data);
+// });
