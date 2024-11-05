@@ -129,44 +129,59 @@ class myPromise implements thenable {
     superReject
   ) {
     // 父过程都结束了还要子Promise干嘛
-    if (superPromise.status!=="pending") return;
+    if (superPromise.status !== "pending") return;
     if (superPromise === valueX) {
       return superReject(
         new TypeError("Chaining cycle detected for promise #<Promise>")
       );
     }
+    //你这个thenable又不一定又状态，为什么只能调用一次
+    let isCalled = false;
 
-  // 只要返回的时obj或者是func就默认是promise了
-  // 这合理吗？ 要是我就想返回一个obj怎么办
-  // 有then但then不是函数就正常返回，没then就报错？
-  // 什么promise怪谈
-  let isCalled=false;
-  if ((typeof valueX === "object" && valueX != null) || typeof valueX === "function") {
-    try{
-      let then=(<thenable>valueX).then;
-      if (typeof then==="function"){
-        then.call(valueX,(valueY)=>{
-          if (isCalled) return;
-          isCalled=true;
-          myPromise.resolvePromise(superPromise,valueY,superResolve,superReject)
-        },(err)=>{
-          superReject(err);
-        })
-      }else{
-        superResolve(valueX);
+    // 只要返回的时obj或者是func就默认是promise了
+    // 这合理吗？ 要是我就想返回一个obj怎么办
+    // 有then但then不是函数就正常返回，没then就报错？
+    // 什么promise怪谈
+    if (
+      (typeof valueX === "object" && valueX != null) ||
+      typeof valueX === "function"
+    ) {
+      try {
+        let then = (<thenable>valueX).then;
+        if (typeof then === "function") {
+          then.call(
+            valueX,
+            (valueY) => {
+              if (isCalled) return;
+              isCalled = true;
+              myPromise.resolvePromise(
+                superPromise,
+                valueY,
+                superResolve,
+                superReject
+              );
+            },
+            (err) => {
+              if (isCalled) return;
+              isCalled = true;
+              superReject(err);
+            }
+          );
+        } else {
+          superResolve(valueX);
+        }
+      } catch (e) {
+        if (isCalled) return;
+        isCalled = true;
+        superReject(e);
       }
-    }catch(e){
-      superReject(e);
+    } else {
+      try {
+        superResolve(valueX);
+      } catch (e) {
+        superReject(e);
+      }
     }
-  }else{
-    try{
-      superResolve(valueX);
-    }catch(e){
-      superReject(e);
-    }
-  }
-
-
   }
 
   static resolve(value?) {
