@@ -1,8 +1,8 @@
 type myPromiseStatus = "pending" | "fulfilled" | "rejected";
 
-type CallbackType = (
-  resolve: (value: any) => void,
-  reject: (reason: any) => void
+type thenCallback = (
+  resolve: (value: any) => myPromise,
+  reject: (reason: any) => any
 ) => any;
 
 interface thenable {
@@ -21,13 +21,16 @@ let thenable = {
   },
 };
 
+type onResolvedCallback = (data?: any) => any;
+type onRejectedCallback = (reason?: any) => any;
+
 class myPromise implements thenable {
   status: myPromiseStatus;
   value: any;
   reason: any;
-  onResolvedCallbacks: Function[];
-  onRejectedCallbacks: Function[];
-  constructor(callback: CallbackType) {
+  onResolvedCallbacks: onResolvedCallback[];
+  onRejectedCallbacks: onRejectedCallback[];
+  constructor(callback: thenCallback) {
     this.status = "pending";
     this.onResolvedCallbacks = [];
     this.onRejectedCallbacks = [];
@@ -41,7 +44,7 @@ class myPromise implements thenable {
     }
   }
 
-  resolve(value: any) {
+  resolve(value: any): myPromise {
     if (this.status !== "pending") return;
     this.value = value;
     this.status = "fulfilled";
@@ -56,7 +59,10 @@ class myPromise implements thenable {
     this.onRejectedCallbacks.forEach((func) => func());
   }
 
-  then(onFulfilled, onRejected?): myPromise {
+  then(
+    onFulfilled?: onResolvedCallback,
+    onRejected?: onRejectedCallback
+  ): myPromise {
     // 当不是函数时，保持原来的value
     onFulfilled =
       typeof onFulfilled === "function" ? onFulfilled : (value: any) => value;
@@ -69,11 +75,11 @@ class myPromise implements thenable {
           };
 
     // 这里的this是上一个promise
-    let newPromise = new myPromise((resolve, reject) => {
+    let newPromise: myPromise = new myPromise((resolve, reject) => {
       if (this.status === "fulfilled") {
         setTimeout(() => {
           try {
-            let result = onFulfilled(this.value);
+            let result: any = onFulfilled(this.value);
             myPromise.resolvePromise(newPromise, result, resolve, reject);
           } catch (e) {
             reject(e);
@@ -93,7 +99,7 @@ class myPromise implements thenable {
           setTimeout(() => {
             try {
               // this指向当前的promise，所以执行时不需要传入value
-              let result = onFulfilled(this.value);
+              let result: any = onFulfilled(this.value);
               myPromise.resolvePromise(newPromise, result, resolve, reject);
             } catch (e) {
               reject(e);
@@ -117,6 +123,11 @@ class myPromise implements thenable {
     return newPromise;
   }
 
+  // then的语法糖
+  catch(onRejected: (reason: any) => any) {
+    return this.then(null, onRejected);
+  }
+
   /**
    * @describe 递归解决then的返回值的多种可能
    * @param valueX 可能是thenable,那么就递归解决; 直接值，就包装后返回
@@ -124,9 +135,9 @@ class myPromise implements thenable {
    */
   static resolvePromise(
     superPromise: myPromise,
-    valueX,
-    superResolve,
-    superReject
+    valueX: any,
+    superResolve: (value: any) => myPromise,
+    superReject: (reason: any) => any
   ) {
     // 父过程都结束了还要子Promise干嘛
     if (superPromise.status !== "pending") return;
@@ -151,7 +162,7 @@ class myPromise implements thenable {
         if (typeof then === "function") {
           then.call(
             valueX,
-            (valueY) => {
+            (valueY: any) => {
               if (isCalled) return;
               isCalled = true;
               myPromise.resolvePromise(
@@ -161,7 +172,7 @@ class myPromise implements thenable {
                 superReject
               );
             },
-            (err) => {
+            (err: any) => {
               if (isCalled) return;
               isCalled = true;
               superReject(err);
@@ -189,8 +200,12 @@ class myPromise implements thenable {
       return value;
     }
 
-    if (typeof value.then === "function") {
-      return new myPromise(value.then);
+    if (value && value.then && typeof value.then === "function") {
+      return new myPromise((resolve, reject) => {
+        setTimeout(() => {
+          value.then(resolve, reject);
+        }, 0);
+      });
     }
 
     return new myPromise((resolve) => resolve(value));
@@ -198,6 +213,59 @@ class myPromise implements thenable {
 
   static reject(reason) {
     return new myPromise((resolve, reject) => reject(reason));
+  }
+
+  finally(callback:Function) {
+      return this.then((value) => {
+          return Promise.resolve(callback()).then(() =>value);
+      }, (err) => {
+          return Promise.resolve(callback()).then(() => {
+              throw err;
+          });
+      });
+  }
+
+  static all(promises){
+    return new myPromise((resolve,reject)=>{
+      let ret=[];
+      let total_size=promises.length;
+      let finished=0;
+      if (total_size===0){
+        resolve(ret);
+      }
+
+      for (let promise of promises){
+        promise=myPromise.resolve(promise);
+        ret.push(promise);
+      }
+
+      for (let promise of ret){
+        promise.then(()=>{
+          finished++;
+          if (finished===total_size){
+            resolve(ret);
+          }
+        },()=>{
+          reject(ret);
+        })
+      }
+
+    })
+  }
+
+  static race(promises){
+    return new myPromise((resolve,reject)=>{
+      for (let promise of promises){
+        promise=myPromise.resolve(promise);
+        promise.then((data)=>{
+          resolve(data);
+          return;
+        },(err)=>{
+          reject(err);
+          return;
+        })
+      }
+    })
   }
 
   // 测试要求
