@@ -68,7 +68,7 @@ class myPromise2 implements thenable {
   then(onRs?: Function, onRj?: Function) {
     onRs = typeof onRs === "function" ? onRs : (value: any) => value;
     onRj =
-      typeof onRs === "function"
+      typeof onRj === "function"
         ? onRj
         : (err: any) => {
             throw err;
