@@ -27,7 +27,7 @@ class myPromise2 implements thenable {
     this.reject = this.reject.bind(this);
     this.callbacks = [];
 
-    // 在浏览器里是怎么做的
+    // 在浏览器里是这么做的
     if (typeof callback !== "function") {
       throw "请提供函数！";
     }
@@ -45,7 +45,6 @@ class myPromise2 implements thenable {
   resolve(data: any): myPromise2 {
     if (this.status !== myPromise2.statusType.pending) return this;
 
-    // 解决resolve可能是promise的情况
     this.value = data;
     this.status = myPromise2.statusType.rs;
 
@@ -75,6 +74,7 @@ class myPromise2 implements thenable {
           };
 
     let thenPromise = new myPromise2(myPromise2.doNothing);
+    
     if (this.status === myPromise2.statusType.rs) {
       setTimeout(() => {
         try {
