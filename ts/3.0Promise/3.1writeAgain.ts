@@ -143,7 +143,6 @@ class myPromise2 implements thenable {
       try {
         let then = (<thenable>valueX).then;
         if (typeof then === "function") {
-          try {
             then.call(
               valueX,
               (valueY: any) => {
@@ -157,9 +156,6 @@ class myPromise2 implements thenable {
                 superPromise.reject(err);
               }
             );
-          } catch (e) {
-            superPromise.reject(e);
-          }
         } else {
           superPromise.resolve(valueX);
         }
