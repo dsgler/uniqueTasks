@@ -47,7 +47,6 @@ class myPromise implements thenable {
   }
 
   resolve(value: any, isSolved: boolean = false): myPromise {
-    debugger;
     if (this.status !== "pending") return this;
     if (isSolved === false) {
       myPromise.resolvePromise(this, value, this.resolve, this.reject);
@@ -283,19 +282,19 @@ class myPromise implements thenable {
       }
     });
   }
+}
 
-  // 测试要求
-  static deferred() {
-    let ret: any = {};
-    ret.promise = new myPromise((resolve, reject) => {
-      ret.resolve = resolve;
-      ret.reject = reject;
-    });
-    return ret;
+let deferred=()=>{
+  let resolve,reject;
+  let promise=new myPromise((rs,rj)=>{resolve=rs;reject=rj});
+  return {
+      promise,
+      resolve,
+      reject
   }
 }
 
-module.exports = myPromise;
+module.exports = {deferred};
 
 // let aaa = myPromise.resolve(thenable);
 // aaa = aaa.then((data) => {
@@ -327,8 +326,8 @@ module.exports = myPromise;
 //   console.log(a);
 // }, 20);
 
-let a=new myPromise((rs,rj)=>{
-  rs(new myPromise((rs2,rj2)=>{
-      setTimeout(()=>{rj2(1)},10)
-  }))
-}).catch((reason)=>{console.log(reason)})
+// let a=new myPromise((rs,rj)=>{
+//   rs(new myPromise((rs2,rj2)=>{
+//       setTimeout(()=>{rj2(1)},10)
+//   }))
+// }).catch((reason)=>{console.log(reason)})
