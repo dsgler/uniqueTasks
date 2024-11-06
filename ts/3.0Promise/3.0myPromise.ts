@@ -1,4 +1,3 @@
-export {};
 type myPromiseStatus = "pending" | "fulfilled" | "rejected";
 
 type thenCallback = (
@@ -39,21 +38,16 @@ class myPromise implements thenable {
     this.reject = this.reject.bind(this);
 
     try {
-      // 这里的函数脱离了，导致this改变
-      callback(this.resolve, this.reject);
+      callback((value)=>{myPromise.resolvePromise(this,value,this.resolve,this.reject,);return this}, this.reject);
     } catch (e) {
       this.reject(e);
     }
   }
 
-  resolve(value: any, isSolved: boolean = false): myPromise {
+  resolve(value: any): myPromise{
     if (this.status !== "pending") return this;
-    if (isSolved === false) {
-      myPromise.resolvePromise(this, value, this.resolve, this.reject);
-    } else {
-      this.value = value;
-      this.status = "fulfilled";
-    }
+    this.value = value;
+    this.status = "fulfilled";
     // value在func函数里自己会通过this获取，不需要传递
     this.onResolvedCallbacks.forEach((func) => func());
     return this;
@@ -143,7 +137,7 @@ class myPromise implements thenable {
   static resolvePromise(
     superPromise: myPromise,
     valueX: any,
-    superResolve: (value: any, isSolved?: boolean) => myPromise,
+    superResolve: (value: any) => myPromise,
     superReject: (reason: any) => any
   ) {
     // 父过程都结束了还要子Promise干嘛
@@ -186,7 +180,7 @@ class myPromise implements thenable {
             }
           );
         } else {
-          superResolve(valueX, true);
+          superResolve(valueX);
         }
       } catch (e) {
         if (isCalled) return;
@@ -195,7 +189,7 @@ class myPromise implements thenable {
       }
     } else {
       try {
-        superResolve(valueX, true);
+        superResolve(valueX);
       } catch (e) {
         superReject(e);
       }
@@ -222,79 +216,71 @@ class myPromise implements thenable {
     return new myPromise((resolve, reject) => reject(reason));
   }
 
-  finally(callback: Function) {
-    return this.then(
-      (value) => {
-        return Promise.resolve(callback()).then(() => value);
-      },
-      (err) => {
-        return Promise.resolve(callback()).then(() => {
-          throw err;
-        });
-      }
-    );
+  finally(callback:Function) {
+      return this.then((value) => {
+          return Promise.resolve(callback()).then(() =>value);
+      }, (err) => {
+          return Promise.resolve(callback()).then(() => {
+              throw err;
+          });
+      });
   }
 
-  static all(promises) {
-    return new myPromise((resolve, reject) => {
-      let ret: any[] = [];
-      let total_size = promises.length;
-      let finished = 0;
-      if (total_size === 0) {
+  static all(promises){
+    return new myPromise((resolve,reject)=>{
+      let ret:any[]=[];
+      let total_size=promises.length;
+      let finished=0;
+      if (total_size===0){
         resolve(ret);
       }
 
-      for (let promise of promises) {
-        promise = myPromise.resolve(promise);
+      for (let promise of promises){
+        promise=myPromise.resolve(promise);
         ret.push(promise);
       }
 
-      for (let promise of ret) {
-        promise.then(
-          () => {
-            finished++;
-            if (finished === total_size) {
-              resolve(ret);
-            }
-          },
-          () => {
-            reject(ret);
+      for (let promise of ret){
+        promise.then(()=>{
+          finished++;
+          if (finished===total_size){
+            resolve(ret);
           }
-        );
+        },()=>{
+          reject(ret);
+        })
       }
-    });
+
+    })
   }
 
-  static race(promises) {
-    return new myPromise((resolve, reject) => {
-      for (let promise of promises) {
-        promise = myPromise.resolve(promise);
-        promise.then(
-          (data) => {
-            resolve(data);
-            return;
-          },
-          (err) => {
-            reject(err);
-            return;
-          }
-        );
+  static race(promises){
+    return new myPromise((resolve,reject)=>{
+      for (let promise of promises){
+        promise=myPromise.resolve(promise);
+        promise.then((data)=>{
+          resolve(data);
+          return;
+        },(err)=>{
+          reject(err);
+          return;
+        })
       }
+    })
+  }
+
+  // 测试要求
+  static deferred() {
+    let ret: any = {};
+    ret.promise = new myPromise((resolve, reject) => {
+      ret.resolve = resolve;
+      ret.reject = reject;
     });
+    return ret;
   }
 }
 
-let deferred=()=>{
-  let resolve,reject;
-  let promise=new myPromise((rs,rj)=>{resolve=rs;reject=rj});
-  return {
-      promise,
-      resolve,
-      reject
-  }
-}
-
-module.exports = {deferred};
+module.exports = myPromise;
 
 // let aaa = myPromise.resolve(thenable);
 // aaa = aaa.then((data) => {
@@ -313,21 +299,8 @@ module.exports = {deferred};
 //   console.log(data);
 // });
 
-// let a = new myPromise((rs, rj) => {
-//   rs(
-//     new Promise((rs2, rj2) => {
-//       setTimeout(() => {
-//         rs2(1);
-//       }, 10);
-//     })
-//   );
-// });
-// setTimeout(() => {
-//   console.log(a);
-// }, 20);
-
-// let a=new myPromise((rs,rj)=>{
-//   rs(new myPromise((rs2,rj2)=>{
-//       setTimeout(()=>{rj2(1)},10)
-//   }))
-// }).catch((reason)=>{console.log(reason)})
+let a=new myPromise((rs,rj)=>{
+    rs(new myPromise((rs2,rj2)=>{
+        setTimeout(()=>{rs2(1)},10)
+    }))
+}).then((data)=>{console.log(data)})

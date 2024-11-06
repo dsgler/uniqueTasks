@@ -1,4 +1,4 @@
-export {};
+// export {};
 interface thenable {
   then: (onRs: (value: any) => void, onRj: (reason: any) => void) => any;
 }
@@ -20,14 +20,12 @@ class myPromise2 implements thenable {
   reason: any;
   // 里面存的全是开箱即用的函数，自动获取状态和值
   callbacks: Function[];
-  isValueSolved: boolean;
 
   constructor(callback: PromiseCallbackType) {
     this.status = myPromise2.statusType.pending;
     this.resolve = this.resolve.bind(this);
     this.reject = this.reject.bind(this);
-    this.isValueSolved = false;
-    this.callbacks=[];
+    this.callbacks = [];
 
     // 在浏览器里是怎么做的
     if (typeof callback !== "function") {
@@ -35,7 +33,10 @@ class myPromise2 implements thenable {
     }
 
     try {
-      callback(this.resolve, this.reject);
+      callback((value) => {
+        myPromise2.resolvePromise(this, value);
+        return this;
+      }, this.reject);
     } catch (e) {
       this.reject(e);
     }
@@ -45,12 +46,8 @@ class myPromise2 implements thenable {
     if (this.status !== myPromise2.statusType.pending) return this;
 
     // 解决resolve可能是promise的情况
-    if (this.isValueSolved) {
-      this.value = data;
-      this.status = myPromise2.statusType.rs;
-    } else {
-      myPromise2.resolvePromise(this, data);
-    }
+    this.value = data;
+    this.status = myPromise2.statusType.rs;
 
     for (let fn of this.callbacks) {
       fn();
@@ -68,7 +65,7 @@ class myPromise2 implements thenable {
     return this;
   }
 
-  then(onRs: Function, onRj: Function) {
+  then(onRs?: Function, onRj?: Function) {
     onRs = typeof onRs === "function" ? onRs : (value: any) => value;
     onRj =
       typeof onRs === "function"
@@ -82,8 +79,7 @@ class myPromise2 implements thenable {
       setTimeout(() => {
         try {
           let result = onRs(this.value);
-          //   myPromise2.resolvePromise(thenPromise, result);
-          thenPromise.resolve(result);
+          myPromise2.resolvePromise(thenPromise, result);
         } catch (e) {
           thenPromise.reject(e);
         }
@@ -91,9 +87,8 @@ class myPromise2 implements thenable {
     } else if (this.status === myPromise2.statusType.rj) {
       setTimeout(() => {
         try {
-          let result = onRj(this.reason);
-          //   myPromise2.resolvePromise(thenPromise, result);
-          thenPromise.resolve(result);
+          let result = onRj!(this.reason);
+          myPromise2.resolvePromise(thenPromise, result);
         } catch (e) {
           thenPromise.reject(e);
         }
@@ -104,8 +99,7 @@ class myPromise2 implements thenable {
           setTimeout(() => {
             try {
               let result = onRs(this.value);
-              //   myPromise2.resolvePromise(thenPromise, result);
-              thenPromise.resolve(result);
+              myPromise2.resolvePromise(thenPromise, result);
             } catch (e) {
               thenPromise.reject(e);
             }
@@ -117,9 +111,8 @@ class myPromise2 implements thenable {
         if (this.status === myPromise2.statusType.rj) {
           setTimeout(() => {
             try {
-              let result = onRj(this.reason);
-              //   myPromise2.resolvePromise(thenPromise, result);
-              thenPromise.resolve(result);
+              let result = onRj!(this.reason);
+              myPromise2.resolvePromise(thenPromise, result);
             } catch (e) {
               thenPromise.reject(e);
             }
@@ -127,6 +120,8 @@ class myPromise2 implements thenable {
         }
       });
     }
+
+    return thenPromise;
   }
 
   static doNothing() {}
@@ -181,16 +176,28 @@ class myPromise2 implements thenable {
       }
     }
   }
-
-  static deferred(){
-    let promise=new myPromise2(myPromise2.doNothing);
-    return {
-        promise:promise,
-        resolve:promise.resolve,
-        reject:promise.reject
-    }
-  }
 }
 
-module.exports = myPromise2;
+function deferred() {
+  let ret: any = {};
+  let promise = new myPromise2((rs, rj) => {
+    ret.resolve = rs;
+    ret.reject = rj;
+  });
+  ret.promise = promise;
+  return ret
+}
 
+module.exports = {deferred};
+
+// let a = new myPromise2((rs, rj) => {
+//   rs(
+//     new myPromise2((rs2, rj2) => {
+//       setTimeout(() => {
+//         rs2(1);
+//       }, 10);
+//     })
+//   );
+// }).then((data) => {
+//   console.log(data);
+// });
