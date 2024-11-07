@@ -38,13 +38,16 @@ class myPromise implements thenable {
     this.reject = this.reject.bind(this);
 
     try {
-      callback((value)=>{myPromise.resolvePromise(this,value,this.resolve,this.reject,);return this}, this.reject);
+      callback((value) => {
+        myPromise.resolvePromise(this, value, this.resolve, this.reject);
+        return this;
+      }, this.reject);
     } catch (e) {
       this.reject(e);
     }
   }
 
-  resolve(value: any): myPromise{
+  resolve(value: any): myPromise {
     if (this.status !== "pending") return this;
     this.value = value;
     this.status = "fulfilled";
@@ -216,57 +219,65 @@ class myPromise implements thenable {
     return new myPromise((resolve, reject) => reject(reason));
   }
 
-  finally(callback:Function) {
-      return this.then((value) => {
-          return Promise.resolve(callback()).then(() =>value);
-      }, (err) => {
-          return Promise.resolve(callback()).then(() => {
-              throw err;
-          });
-      });
+  finally(callback: Function) {
+    return this.then(
+      (value) => {
+        return Promise.resolve(callback()).then(() => value);
+      },
+      (err) => {
+        return Promise.resolve(callback()).then(() => {
+          throw err;
+        });
+      }
+    );
   }
 
-  static all(promises){
-    return new myPromise((resolve,reject)=>{
-      let ret:any[]=[];
-      let total_size=promises.length;
-      let finished=0;
-      if (total_size===0){
+  static all(promises) {
+    return new myPromise((resolve, reject) => {
+      let ret: any[] = [];
+      let total_size = promises.length;
+      let finished = 0;
+      if (total_size === 0) {
         resolve(ret);
       }
 
-      for (let promise of promises){
-        promise=myPromise.resolve(promise);
+      for (let promise of promises) {
+        promise = myPromise.resolve(promise);
         ret.push(promise);
       }
 
-      for (let promise of ret){
-        promise.then(()=>{
-          finished++;
-          if (finished===total_size){
-            resolve(ret);
+      for (let promise of ret) {
+        promise.then(
+          () => {
+            finished++;
+            if (finished === total_size) {
+              resolve(ret);
+            }
+          },
+          () => {
+            reject(ret);
           }
-        },()=>{
-          reject(ret);
-        })
+        );
       }
-
-    })
+    });
   }
 
-  static race(promises){
-    return new myPromise((resolve,reject)=>{
-      for (let promise of promises){
-        promise=myPromise.resolve(promise);
-        promise.then((data)=>{
-          resolve(data);
-          return;
-        },(err)=>{
-          reject(err);
-          return;
-        })
+  static race(promises) {
+    return new myPromise((resolve, reject) => {
+      for (let promise of promises) {
+        promise = myPromise.resolve(promise);
+        promise.then(
+          (data) => {
+            resolve(data);
+            return;
+          },
+          (err) => {
+            reject(err);
+            return;
+          }
+        );
       }
-    })
+    });
   }
 
   // 测试要求
@@ -280,7 +291,7 @@ class myPromise implements thenable {
   }
 }
 
-module.exports = myPromise;
+// module.exports = myPromise;
 
 // let aaa = myPromise.resolve(thenable);
 // aaa = aaa.then((data) => {
@@ -299,8 +310,84 @@ module.exports = myPromise;
 //   console.log(data);
 // });
 
-let a=new myPromise((rs,rj)=>{
-    rs(new myPromise((rs2,rj2)=>{
-        setTimeout(()=>{rs2(1)},10)
-    }))
-}).then((data)=>{console.log(data)})
+// let a=new myPromise((rs,rj)=>{
+//     rs(new myPromise((rs2,rj2)=>{
+//         setTimeout(()=>{rs2(1)},10)
+//     }))
+// }).then((data)=>{console.log(data)})
+
+/* -------------------------------------------------------------- */
+
+type CallbackType = (error: any, data: any) => void;
+
+//基于回调的函数：最后一个参数传入回调
+type BaseOnCallbackFunction = (...args: [...any[], CallbackType]) => any;
+
+// baseOnCallback(...args, (error, result) => {}); //示例
+
+//基于promise的函数:
+type BaseOnPromiseFunction = (...args: any[]) => Promise<any>;
+
+// baseOnPromise(...args).then(
+//     (value) => {},
+//     (reason) => {}
+// ); //示例
+
+//promisify函数接收一个基于回调的函数，返回一个基于Promise的函数
+type PromisifyType = (fn: BaseOnCallbackFunction) => BaseOnPromiseFunction;
+
+// const baseOnPromise = promisify(baseOnCallback); //示例
+
+// 整个回调函数出来测试一下效果
+import ajax from "ajax-for-node";
+
+function baseOnCallback(url: string, callback: CallbackType) {
+  ajax({
+    url,
+    method: "GET",
+    success: (result, status, xhr) => {
+      callback(null, result);
+    },
+    error: (xhr, status, error) => {
+      callback({ xhr, status, error }, null);
+    },
+  });
+}
+
+baseOnCallback("https://www.baidu.com", (err, data) => {
+  if (err) {
+    console.log(err);
+  } else {
+    console.log(data);
+  }
+});
+
+function promisify(baseOnCallback: Function): Function {
+  let resolve, reject;
+  let promise = new myPromise((rs, rj) => {
+    resolve = rs;
+    reject = rj;
+  });
+
+  return (...args) => {
+    args.push((err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+    baseOnCallback.apply(null, args);
+    return promise;
+  };
+}
+
+const baseOnPromise: Function = promisify(baseOnCallback);
+baseOnPromise("https://www.baidu.com").then(
+  (value) => {
+    console.log(value);
+  },
+  (reason) => {
+    console.log(reason);
+  }
+);
