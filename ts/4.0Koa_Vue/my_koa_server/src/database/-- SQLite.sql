@@ -1,0 +1,14 @@
+-- SQLite
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username VARCHAR(63) NOT NULL,
+    email VARCHAR(63) NOT NULL,
+    passwd CHAR(64) NOT NULL,
+    salt INT NOT NULL
+);
+
+SELECT * FROM users;
+
+INSERT INTO users VALUES (NULL,"111","22@qq.com","123",111222333);
+
+DROP TABLE users;
