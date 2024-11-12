@@ -36,23 +36,26 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var koa_1 = require("koa");
-var koa_bodyparser_1 = require("koa-bodyparser");
+var Koa = require("koa");
+var bodyParser = require("koa-bodyparser");
 var Router = require("koa-router");
-// import sqlite3Raw from "../node_modules/sqlite3/node_modules/.bin/";
-// import { Database } from 'sqlite-async';
 var node_sqlite_1 = require("node:sqlite");
 var jwt_1 = require("./jwt");
-var app = new koa_1.default();
+var app = new Koa();
 var router = new Router();
 function validateEmail(email) {
     var regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     return regex.test(email);
 }
+function isEmptyStr(str) {
+    return str == null || str === "";
+}
+/**
+ * @describe 生成一个随机数
+ * @returns {number} 在int范围内
+ */
 function gen_salt() {
     return Math.floor(Math.random() * 4294967296) - 2147483648;
-}
-function hash_with_salt(rawPasswd, salt) {
 }
 // log url:
 // 作为第一个事件，打印日志
@@ -68,57 +71,85 @@ app.use(function (ctx, next) { return __awaiter(void 0, void 0, void 0, function
         }
     });
 }); });
-app.use((0, koa_bodyparser_1.default)());
+app.use(bodyParser());
 router.post("/register", function (ctx, next) { return __awaiter(void 0, void 0, void 0, function () {
-    var body, resp, resp, resp, salt, passwd, database, insert, e_1;
+    var body, resp, resp, resp, salt, passwd, database, insert, resp, e_1, resp;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 body = ctx.request.body;
-                if (!(typeof body.email !== "string" || typeof body.username !== "string" || typeof body.passwd !== "string")) return [3 /*break*/, 2];
-                return [4 /*yield*/, next()];
-            case 1:
-                _a.sent();
-                resp = { err: "信息不全,body:" + body };
-                ctx.response.body = JSON.stringify(resp);
-                return [2 /*return*/];
-            case 2:
-                if (!(body.email === "" || body.username === "" || body.passwd === "")) return [3 /*break*/, 4];
-                return [4 /*yield*/, next()];
-            case 3:
-                _a.sent();
-                resp = { err: "信息不能为空字符串,body:" + body };
-                ctx.response.body = JSON.stringify(resp);
-                return [2 /*return*/];
-            case 4:
-                if (!validateEmail(body.email)) return [3 /*break*/, 6];
-                return [4 /*yield*/, next()];
-            case 5:
-                _a.sent();
-                resp = { err: "邮件格式错误,email:" + body.email };
-                ctx.response.body = JSON.stringify(resp);
-                return [2 /*return*/];
-            case 6:
+                if (typeof body.email !== "string" || typeof body.username !== "string" || typeof body.passwd !== "string") {
+                    resp = { err: "信息不全,body:" + body };
+                    ctx.response.body = JSON.stringify(resp);
+                    return [2 /*return*/];
+                }
+                if (body.email === "" || body.username === "" || body.passwd === "") {
+                    resp = { err: "信息不能为空字符串,body:" + body };
+                    ctx.response.body = JSON.stringify(resp);
+                    return [2 /*return*/];
+                }
+                if (!validateEmail(body.email)) {
+                    resp = { err: "邮件格式错误,email:" + body.email };
+                    ctx.response.body = JSON.stringify(resp);
+                    return [2 /*return*/];
+                }
                 salt = gen_salt();
-                passwd = jwt_1.default.createHmacSHA256(body.passwd, salt);
-                _a.label = 7;
-            case 7:
-                _a.trys.push([7, 9, , 11]);
+                passwd = jwt_1.default.createHmacSHA256(body.passwd + salt, salt);
+                _a.label = 1;
+            case 1:
+                _a.trys.push([1, 3, , 5]);
                 database = new node_sqlite_1.DatabaseSync('./database/test.db');
                 insert = database.prepare('INSERT INTO users VALUES (NULL,?,?,?,?);');
                 insert.run(body.username, body.email, passwd, salt);
                 return [4 /*yield*/, next()];
-            case 8:
+            case 2:
                 _a.sent();
-                return [2 /*return*/, { err: null }];
-            case 9:
+                resp = { err: null };
+                ctx.response.body = JSON.stringify(resp);
+                return [2 /*return*/];
+            case 3:
                 e_1 = _a.sent();
                 return [4 /*yield*/, next()];
-            case 10:
+            case 4:
                 _a.sent();
-                return [2 /*return*/, { err: e_1 }];
-            case 11: return [2 /*return*/];
+                resp = { err: e_1 };
+                ctx.response.body = JSON.stringify(resp);
+                return [2 /*return*/];
+            case 5: return [2 /*return*/];
         }
+    });
+}); });
+router.post("/login", function (ctx, next) { return __awaiter(void 0, void 0, void 0, function () {
+    var body, resp_1, database, query, res, resp_2, salt, correct_passwd, passwd, resp_3, myJWT_instance, payload, rawJWT, resp;
+    return __generator(this, function (_a) {
+        body = ctx.request.body;
+        if (isEmptyStr(body.passwd) || isEmptyStr(body.username)) {
+            resp_1 = { err: "用户名或密码不能为空", rawJWT: null };
+            ctx.response.body = JSON.stringify(resp_1);
+            return [2 /*return*/];
+        }
+        database = new node_sqlite_1.DatabaseSync('./database/test.db');
+        query = database.prepare("SELECT * FROM users WHERE username=?;");
+        res = query.all(body.username);
+        if (res.length !== 1) {
+            resp_2 = { err: "用户不存在", rawJWT: null };
+            ctx.response.body = JSON.stringify(resp_2);
+            return [2 /*return*/];
+        }
+        salt = res[0].salt;
+        correct_passwd = res[0].passwd;
+        passwd = jwt_1.default.createHmacSHA256(body.passwd + salt, salt);
+        if (passwd !== correct_passwd) {
+            resp_3 = { err: "密码错误", rawJWT: null };
+            ctx.response.body = JSON.stringify(resp_3);
+            return [2 /*return*/];
+        }
+        myJWT_instance = new jwt_1.default();
+        payload = { exp: Date.now() + 57600000, username: body.username };
+        rawJWT = myJWT_instance.stringify(payload, salt);
+        resp = { err: null, rawJWT: rawJWT };
+        ctx.response.body = JSON.stringify(resp);
+        return [2 /*return*/];
     });
 }); });
 app.use(router.routes());
