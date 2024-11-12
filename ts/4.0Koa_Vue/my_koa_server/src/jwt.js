@@ -22,6 +22,9 @@ var myJWT = /** @class */ (function () {
         else {
             rawJWT = this.rawJWT;
         }
+        if (rawJWT == null) {
+            return 105;
+        }
         var arr = rawJWT.split(".");
         if (arr.length !== 3) {
             this.errCode = 100;
@@ -95,6 +98,7 @@ var myJWT = /** @class */ (function () {
         101: "JWT加密算法错误,或类型不对",
         102: "JWT验证错误",
         103: "已过期",
+        104: "请输入rawJWT"
     };
     return myJWT;
 }());

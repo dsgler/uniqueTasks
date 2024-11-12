@@ -1,0 +1,26 @@
+{
+  "name": "my_koa_server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "index": "cd src && tsc index.ts && node --experimental-sqlite index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "koa": "^2.15.3",
+    "koa-bodyparser": "^4.4.1",
+    "koa-router": "^13.0.1",
+    "koa2-cors": "^2.0.6"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.15.0",
+    "@types/koa-bodyparser": "^4.3.12",
+    "@types/koa-router": "^7.4.8",
+    "@types/koa2-cors": "^2.0.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  }
+}

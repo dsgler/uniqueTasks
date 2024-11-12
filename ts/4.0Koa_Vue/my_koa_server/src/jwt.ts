@@ -20,6 +20,7 @@ class myJWT {
     101: "JWT加密算法错误,或类型不对",
     102: "JWT验证错误",
     103: "已过期",
+    104: "请输入rawJWT"
   };
   static createHmacSHA256(data: string, key: number): string {
     let buf = Buffer.alloc(4);
@@ -49,6 +50,10 @@ class myJWT {
       this.rawJWT = rawJWT;
     } else {
       rawJWT = this.rawJWT;
+    }
+
+    if (rawJWT==null){
+      return 105;
     }
     let arr = rawJWT!.split(".");
     if (arr.length !== 3) {
