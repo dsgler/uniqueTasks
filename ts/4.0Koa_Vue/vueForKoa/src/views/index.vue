@@ -17,7 +17,8 @@ let route = useRoute();
 let JWTstore = useJWTStore();
 function empty_JWT_and_route_to_login() {
     JWTstore.JWT = "";
-    setTimeout(()=>{router.push("/login");},3000);
+    info.value!.username="请稍后，将跳转回主页";
+    setTimeout(()=>{router.push("/login");},1000);
 }
 if (JWTstore.JWT === "") {
     empty_JWT_and_route_to_login();

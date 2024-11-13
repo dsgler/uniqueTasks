@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import axios from 'axios';
 import { useRouter, useRoute } from 'vue-router';
 import { useJWTStore } from '@/stores/JWT';
@@ -13,17 +13,26 @@ type register_body_type = {
 type register_resp_type = { err: string | null };
 type login_body_type = { username: string; passwd: base64urlString };
 type login_resp_type = { err: string | null; rawJWT: base64urlString | null };
+type change_passwd_body_type = {
+  username: string;
+  oldPasswd: base64urlString;
+  newPasswd: base64urlString;
+};
 
 let JWTstore = useJWTStore();
 let username = ref("");
 let email = ref("");
 let passwd = ref("");
 let passwd_confirm = ref("");
+let newPasswd=ref("");
 let button_disable = ref(false);
 let router = useRouter();
 let route = useRoute();
 let isRegister = computed(() => {
     return route.name === "register";
+})
+let isChangePasswd = computed(() => {
+    return route.name === "change_passwd";
 })
 
 
@@ -39,9 +48,16 @@ async function sha256Base64URL(message: string): Promise<string> {
     return hashBase64URL;
 }
 
-function validateEmail(email: string): boolean {
+function isValidateEmail(email: string): boolean {
     const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     return regex.test(email);
+}
+
+function isValidatePasswd(passwd:string){
+    if (passwd.length<8){
+        return false;
+    }
+    return true;
 }
 
 async function commit_register_form() {
@@ -49,12 +65,16 @@ async function commit_register_form() {
         message_set(2, "字段不能为空！");
         return;
     }
-    if (!validateEmail(email.value)) {
+    if (!isValidateEmail(email.value)) {
         message_set(2, "邮箱格式错误！");
         return;
     }
     if (username.value.length >= 15 || email.value.length >= 20) {
         message_set(2, "用户名或邮箱过长！");
+        return;
+    }
+    if (!isValidatePasswd(passwd.value) || !isValidatePasswd(passwd_confirm.value)) {
+        message_set(2, "密码长度过短！");
         return;
     }
     if (passwd.value !== passwd_confirm.value) {
@@ -90,17 +110,22 @@ async function commit_login_form() {
         message_set(2, "字段不能为空！");
         return;
     }
+    if (!isValidatePasswd(passwd.value)) {
+        message_set(2, "密码长度过短！");
+        return;
+    }
     button_disable.value = true;
     // 防止一直被禁用
     setTimeout(() => { button_disable.value = false }, 30000);
     passwd.value = await sha256Base64URL(passwd.value);
     let postObj: login_body_type = { username: username.value, passwd: passwd.value };
+    message_set(3, "加载中");
     axios.post("http://localhost:3000/login", postObj).then((resp) => {
         let ret = <login_resp_type>resp.data;
         if (ret.err === null) {
-            message_set(1, "登录成功");
+            message_set(1, "登录成功，即将跳转到主页");
             JWTstore.JWT = ret.rawJWT!;
-            setTimeout(() => { router.push("/"); }, 3000);
+            setTimeout(() => { router.push("/"); }, 1000);
         } else {
             message_set(2, ret.err!);
             button_disable.value = false;
@@ -110,6 +135,45 @@ async function commit_login_form() {
         message_set(2, err);
         button_disable.value = false;
 
+    })
+}
+
+async function commit_changePasswd_form(){
+    if (username.value==="" || passwd.value==="" || newPasswd.value===""){
+        message_set(2,"字段不能为空");
+        return;
+    }
+    if (!isValidatePasswd(passwd.value) || !isValidatePasswd(passwd_confirm.value)) {
+        message_set(2, "密码长度过短！");
+        return;
+    }
+    if (newPasswd.value!==passwd_confirm.value){
+        message_set(2,"两次密码不一样！");
+        return;
+    }
+    button_disable.value = true;
+    // 防止一直被禁用
+    setTimeout(() => { button_disable.value = false }, 30000);
+    passwd.value = await sha256Base64URL(passwd.value);
+    newPasswd.value = await sha256Base64URL(newPasswd.value);
+    passwd_confirm.value=newPasswd.value;
+    let postObj: change_passwd_body_type = { username: username.value, oldPasswd: passwd.value , newPasswd: newPasswd.value};
+    message_set(3, "加载中");
+    axios.post("http://localhost:3000/change_passwd",postObj).then((resp)=>{
+        let ret = <register_resp_type>resp.data;
+        if (ret.err===null){
+            message_set(1,"修改密码成功，即将跳转到登录界面");
+            setTimeout(() => { router.push("/login"); }, 3000);
+        }else{
+            message_set(2,ret.err);
+        }
+    },(err)=>{
+        message_set(2,err);
+    }).finally(()=>{
+        passwd.value="";
+        newPasswd.value="";
+        passwd_confirm.value="";
+        button_disable.value = true;
     })
 }
 
@@ -126,7 +190,17 @@ function message_set(status: number, str: string) {
     message_text.value = str;
 }
 
-// message_set(1, <string>route.name);
+watch(()=>route.name,(oldName,newName)=>{
+    message_set(0,"");
+    button_disable.value = false;
+
+    if (oldName==="register"){
+        passwd.value="";
+        username.value="";
+        passwd_confirm.value="";
+        email.value="";
+    }
+})
 </script>
 
 <template>
@@ -140,7 +214,7 @@ function message_set(status: number, str: string) {
                 <div class="form_label">账号</div>
                 <input type="text" placeholder="请输入账号" v-model.lazy="username" class="myinput" />
             </div>
-            <div class="form_row" v-if="isRegister">
+            <div class="form_row" v-show="isRegister">
                 <div class="form_label">邮箱</div>
                 <input type="text" placeholder="请输入邮箱" v-model.lazy="email" class="myinput" />
             </div>
@@ -148,20 +222,25 @@ function message_set(status: number, str: string) {
                 <div class="form_label">密码</div>
                 <input type="password" placeholder="请输入密码" v-model.lazy="passwd" class="myinput" />
             </div>
-            <div class="form_row" v-if="isRegister">
+            <div class="form_row" v-show="isChangePasswd">
+                <div class="form_label">新密码</div>
+                <input type="password" placeholder="请输入新密码" v-model.lazy="newPasswd" class="myinput" />
+            </div>
+            <div class="form_row" v-show="isRegister || isChangePasswd">
                 <div class="form_label">确认密码</div>
-                <input type="password" placeholder="再次输入账号" v-model.lazy="passwd_confirm" class="myinput" />
+                <input type="password" placeholder="请再次输入密码" v-model.lazy="passwd_confirm" class="myinput" />
             </div>
             <div class="form_row">
                 <div class="form_label"></div>
                 <div style="display: flex;width: 100%;justify-content: center;">
-                    <button @click="() => { if (isRegister) { commit_register_form() } else { commit_login_form() } }"
+                    <button @click="() => { if (isRegister) { commit_register_form() } else if (isChangePasswd){commit_changePasswd_form()}else { commit_login_form() } }"
                         :disabled="button_disable" :class="{ disabled: button_disable }">提交</button>
                 </div>
             </div>
             <div class="form_row" style="display: flex;justify-content: space-around;">
                 <RouterLink to="/register">注册</RouterLink>
                 <RouterLink to="/login">登录</RouterLink>
+                <RouterLink to="/change_passwd">更改密码</RouterLink>
             </div>
         </div>
     </div>
@@ -244,6 +323,11 @@ button.disabled {
 #message.error {
     box-shadow: rgb(223 12 12 / 43%) 0px 0px 0px 1px;
     color: #de3b3bf0;
+}
+
+#message.loading {
+    box-shadow: rgba(56, 56, 56, 0.265) 0px 0px 0px 1px;
+    color: black;
 }
 
 .form_row>a.router-link-active {

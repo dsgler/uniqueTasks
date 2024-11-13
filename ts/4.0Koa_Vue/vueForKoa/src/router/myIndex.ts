@@ -20,6 +20,11 @@ const router = createRouter({
       name:"index",
       component: index,
     },
+    {
+      path:"/change_passwd",
+      name:"change_passwd",
+      component: login,
+    },
   ],
 })
 

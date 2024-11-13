@@ -32,7 +32,7 @@ class myJWT {
   static stringToBase64url() {}
 
   payload?: JWTPayloadType;
-  sign: string;
+  sign?: string;
   rawJWT?: string;
   rawUnion?: string;
   secretKey?: number;
