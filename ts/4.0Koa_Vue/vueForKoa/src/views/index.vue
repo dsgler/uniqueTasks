@@ -12,19 +12,24 @@ interface carryJWT {
   rawJWT: string;
 }
 
+let info: Ref<getinfo_resp_type["info"]> = ref({ username: "", email: "" });
 let router = useRouter();
-let route = useRoute();
+// let route = useRoute();
 let JWTstore = useJWTStore();
 function empty_JWT_and_route_to_login() {
     JWTstore.JWT = "";
+    if (info==null){
+        router.push("/login");
+    }
     info.value!.username="请稍后，将跳转回主页";
     setTimeout(()=>{router.push("/login");},1000);
 }
 if (JWTstore.JWT === "") {
     empty_JWT_and_route_to_login();
+}else{
+    show_info();
 }
 
-let info: Ref<getinfo_resp_type["info"]> = ref({ username: "", email: "" });
 function show_info() {
     let req = axios.post("http://localhost:3000/getinfo",<carryJWT>{rawJWT:JWTstore.JWT})
     req.then((resp) => {
@@ -42,7 +47,7 @@ function show_info() {
     })
 }
 
-show_info();
+// show_info();
 
 
 </script>
