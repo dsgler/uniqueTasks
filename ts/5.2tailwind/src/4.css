@@ -1,9 +1,9 @@
 :root {
-  --distance: 50px;
+  --distance: 300px;
 }
 
-body{
-    margin: 0px;
+body {
+  margin: 0px;
 }
 
 #container {
@@ -14,7 +14,7 @@ body{
   flex-direction: column;
   align-items: center;
 
-  background: linear-gradient(to bottom right, #EAD6EE, #A0F1EA);
+  background: linear-gradient(to bottom right, #ead6ee, #a0f1ea);
 }
 
 #main {
@@ -50,23 +50,26 @@ body{
   width: 100%;
 }
 
-#img-center {
+.img-center {
   transform: translateZ(var(--distance));
 }
 
-#img-left {
-  transform: rotateY(240deg) translateX(calc(var(--distance) * (-5.5)))
-    translateZ(calc(var(--distance) * (0.866)));
-  transform-origin: left;
+.img-left {
+  /* transform: rotateY(240deg) translateX(calc(var(--distance) * (-5.5)))
+    translateZ(calc(var(--distance) * (0.866))); */
+  /* transform-origin: left; */
+  /* 这个方向是相对面向的啊，亏我想那么半天 */
+  transform: rotateY(240deg) translateZ(var(--distance));
 }
 
-#img-right {
-  transform: rotateY(120deg) translateX(calc(var(--distance) * (5.5)))
-    translateZ(calc(var(--distance) * (0.866)));
-  transform-origin: right;
+.img-right {
+  /* transform: rotateY(120deg) translateX(calc(var(--distance) * (5.5)))
+    translateZ(calc(var(--distance) * (0.866))); */
+  /* transform-origin: right; */
+  transform: rotateY(120deg) translateZ(var(--distance));
 }
 
-.occu{
-    width: 100%;
-    height: 100%;
+.occu {
+  width: 100%;
+  height: 100%;
 }
