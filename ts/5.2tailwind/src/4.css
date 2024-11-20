@@ -1,0 +1,72 @@
+:root {
+  --distance: 50px;
+}
+
+body{
+    margin: 0px;
+}
+
+#container {
+  width: 100%;
+  min-height: 100vh;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  background: linear-gradient(to bottom right, #EAD6EE, #A0F1EA);
+}
+
+#main {
+  margin: 20px;
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  perspective: 900px;
+  transform-style: preserve-3d;
+  perspective-origin: 50% 50%;
+}
+
+.img-container {
+  max-width: 400px;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  position: absolute;
+  margin: 0px auto;
+  top: 200px;
+
+  -webkit-box-reflect: below 3px -webkit-linear-gradient(top, rgba(0, 0, 0, 0)
+        80%, rgba(0, 0, 0, 0.25));
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.img-container > img {
+  width: 100%;
+}
+
+#img-center {
+  transform: translateZ(var(--distance));
+}
+
+#img-left {
+  transform: rotateY(240deg) translateX(calc(var(--distance) * (-5.5)))
+    translateZ(calc(var(--distance) * (0.866)));
+  transform-origin: left;
+}
+
+#img-right {
+  transform: rotateY(120deg) translateX(calc(var(--distance) * (5.5)))
+    translateZ(calc(var(--distance) * (0.866)));
+  transform-origin: right;
+}
+
+.occu{
+    width: 100%;
+    height: 100%;
+}

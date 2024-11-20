@@ -1,0 +1,24 @@
+#ball{
+    width: 40px;
+    aspect-ratio: 1;
+    background-color: aqua;
+    border-radius: 20px;
+    animation: moveX 1.71s infinite linear alternate,moveY 2.37s infinite linear alternate;
+    animation-composition: accumulate;
+}
+
+@keyframes moveX{
+    form{
+        transform: translateX(0);
+    }to{
+        transform: translateX(50vw);
+    }
+}
+
+@keyframes moveY{
+    form{
+        transform: translateY(0);
+    }to{
+        transform: translateY(50vh);
+    }
+}
