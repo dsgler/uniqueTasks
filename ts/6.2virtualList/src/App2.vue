@@ -5,6 +5,8 @@ import { lodash } from './assets/debounce';
 
 // 预渲染元素
 const preLoadLen=10
+
+const bufferLen=3;
 // 虚拟高度
 const fakeListHeight = ref(80);
 // 记录每个元素的 底部 偏移
@@ -57,14 +59,16 @@ async function eSearch(height: number):Promise<number> {
 async function _onScroll(e: Event) {
     const target = <HTMLElement>e.target;
     let scrollTop = target.scrollTop;
-    startIndex.value=await eSearch(scrollTop);
+    let a=await eSearch(scrollTop)
+    startIndex.value=Math.max(a-bufferLen,0);
 
     let scrollBottom = scrollTop + viewHeight.value;
-    endIndex.value=await eSearch(scrollBottom);
+    a=await eSearch(scrollBottom);
+    endIndex.value=Math.min(a+bufferLen,rawArr.length);
 }
 
 // 节流
-let onScroll = lodash._.throttle(_onScroll, 0.5, { leading: true, trailing: false })
+let onScroll = lodash._.throttle(_onScroll, 0.2, { leading: false, trailing: true })
 
 // 用于渲染元素以获取高度
 const computeContent = ref("");
