@@ -2,54 +2,64 @@
 import { ref, computed, useTemplateRef, watch, nextTick } from 'vue';
 import { rawArr } from './li';
 import { lodash } from './assets/debounce';
-const fakeListHeight = 80;
-const computedHeight: number[] = Array.from({length:rawArr.length},()=>0)
-let computedHeightLen=ref(0);
 
+// 虚拟高度
+const fakeListHeight = 80;
+// 记录每个元素的 底部 偏移
+// 需要特判 0 的时候
+const computedHeight: number[] = Array.from({ length: rawArr.length }, () => 0)
+let computedHeightLen = ref(0);
+
+// 根据 startIndex 和 endIndex 确定渲染的列表
 const visibleList = computed(() => rawArr.slice(startIndex.value, endIndex.value + 1))
-const maxHeight = ref(rawArr.length*fakeListHeight)
+// 虚拟的高度，在渲染完后才是真实高度
+const maxHeight = computed(()=>{
+    return computedHeight[Math.max(computedHeightLen.value - 1,0)] + fakeListHeight * (rawArr.length - computedHeightLen.value)
+})
 
 const startIndex = ref(0);
 const endIndex = ref(10);
 
-// computedHeight[computedHeight.length - 1] + fakeListHeight * (rawArr.length - computedHeight.length)
-
 const viewdiv = useTemplateRef("viewdiv")
 const viewHeight = computed(() => viewdiv.value!.clientHeight)
-const occu_translate = computed(() => `translate3d(0px, ${computedHeight[startIndex.value - 1]}px, 0px)`)
+const view_translate = computed(() => `translate3d(0px, ${startIndex.value>0 ? computedHeight[startIndex.value - 1]: 0}px, 0px)`)
 
-async function _onScroll(e: Event) {
-    // console.log(1)
-    const target = <HTMLElement>e.target;
-    let scrollTop = target.scrollTop;
-    for (let i = 0; i < rawArr.length; i++) {
-        if ((await getHeight(i - 1)) < scrollTop) {
-            if ((await getHeight(i)) >= scrollTop) {
-                startIndex.value = i;
-                break;
+async function eSearch(height: number):Promise<number> {
+    if (height <= computedHeight[computedHeightLen.value - 1]) {
+        let l = 0, r = computedHeightLen.value - 1;
+        let ans = -1;
+        while (l <= r) {
+            // ~~也可转为整数，网上看到的
+            let m = Math.ceil(l + (r - l) / 2);
+            if ((await getHeight(m)) < height) {
+                l = m + 1;
+                continue;
+            } else {
+                ans = m;
+                r = m - 1;
             }
-        } else {
-            // debugger;
-            // startIndex.value=0;
-            break;
         }
-    }
+        return ans;
+    }else{
+        let h;
+        do{
+            h=await getHeight(computedHeightLen.value);
+        }while(height>h);
 
-    let scrollBottom = scrollTop + viewHeight.value;
-    for (let i = 1; i < rawArr.length; i++) {
-        if ((await getHeight(i - 1)) < scrollBottom) {
-            if ((await getHeight(i)) >= scrollBottom) {
-                endIndex.value = i;
-                break;
-            }
-        } else {
-            // debugger;
-            break;
-        }
+        return computedHeightLen.value;
     }
 }
 
-let onScroll=lodash._.throttle(_onScroll,0.5,{leading:true,trailing:false})
+async function _onScroll(e: Event) {
+    const target = <HTMLElement>e.target;
+    let scrollTop = target.scrollTop;
+    startIndex.value=await eSearch(scrollTop);
+
+    let scrollBottom = scrollTop + viewHeight.value;
+    endIndex.value=await eSearch(scrollBottom);
+}
+
+let onScroll = lodash._.throttle(_onScroll, 0.5, { leading: true, trailing: false })
 
 const computeContent = ref("");
 const computeArea = useTemplateRef("computeArea");
@@ -58,49 +68,34 @@ async function getHeight(n: number): Promise<number> {
     if (n < -1) {
         debugger;
     }
-
     if (n === -1) {
         return 0;
     }
-
-
     if (n < computedHeightLen.value) {
         return computedHeight[n];
     }
+
     computeContent.value = rawArr[n];
     await nextTick();
     let h = computeArea.value!.offsetHeight + (await getHeight(n - 1));
     computedHeight[n] = h
-    computedHeightLen.value=Math.max(computedHeightLen.value,n+1);
-    // maxHeight.value=computedHeight[computedHeightLen - 1] + fakeListHeight * (rawArr.length - computedHeightLen)
+    computedHeightLen.value = Math.max(computedHeightLen.value, n + 1);
     return h;
 }
 
-watch(maxHeight, (v, o) => {
-    // debugger;
-})
-
-watch(computedHeightLen,(v,o)=>{
-    if (v>o){
-        if (computedHeightLen.value>=99){
-            debugger;
-        }
-        maxHeight.value=computedHeight[computedHeightLen.value - 1] + fakeListHeight * (rawArr.length - computedHeightLen.value)
-    }
-})
-
-async function a() {
+// 我就说要多打分号
+// 先获取前10个的高度
+(async function () {
     for (let i = 0; i < 10; i++) {
         await getHeight(i);
     }
-}
-a()
+})();
 </script>
 
 <template>
-    <div @scroll="onScroll" class="container" style="height: 100vh;overflow: scroll;">
-        <div class="occu" :style="{ height: maxHeight + 'px', width: '100%', transform: occu_translate }">
-            <div style="width: 100%;height: 100vh;" ref="viewdiv">
+    <div @scroll="onScroll" class="container" style="height: 100vh;overflow-y: scroll;">
+        <div class="occu" :style="{ height: maxHeight + 'px', width: '100%' }">
+            <div style="width: 100%;height: 100vh;" ref="viewdiv" :style="{ transform: view_translate }">
                 <div v-html="v" class="myli" v-for="(v, k) in visibleList" :key="startIndex + k">
                 </div>
                 <div v-html="computeContent" class="myli" ref="computeArea"
