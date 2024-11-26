@@ -1,31 +1,35 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { lodash } from "./debounce";
+
 let styleLeft = { transform: "rotateY(240deg) translateZ(var(--distance))" };
 let styleCenter = { transform: "translateZ(var(--distance))" };
 let styleRight = { transform: "rotateY(120deg) translateZ(var(--distance))" };
 let styleArr = ref([styleLeft, styleCenter, styleRight]);
 
 let classArr = ref(["img-left", "img-center", "img-right"])
-let pid:number|null=null
-function switchClassForward() {
+let pid: number | null = null
+function _switchClassForward() {
   classArr.value.push(classArr.value.shift()!);
 }
 
-function switchClassBackward() {
+function _switchClassBackward() {
   classArr.value.unshift(classArr.value.pop()!);
 }
 
-let status=ref("播放");
-function togglePlay(){
+let switchClassForward=lodash._.throttle(_switchClassForward,1000,{leading:true,trailing:false})
+
+let status = ref("播放");
+function togglePlay() {
   console.log(pid);
-  if (pid===null){
+  if (pid === null) {
     switchClassForward();
-    status.value="停止"
-    pid=setInterval(switchClassForward,2000)
-  }else{
-    status.value="播放"
+    status.value = "停止"
+    pid = setInterval(switchClassForward, 2000)
+  } else {
+    status.value = "播放"
     clearInterval(pid);
-    pid=null
+    pid = null
   }
 }
 </script>
@@ -45,9 +49,13 @@ function togglePlay(){
         <div class="occu"></div>
         <img src="/67624284_p0.jpg" />
       </div>
-      <button @click="togglePlay" class="text-white w-[50px] h-[50px] rounded-full bg-emerald-300 top-[550px] border-none absolute">{{ status }}</button>
-      <button @click="()=>{if (pid!==null){togglePlay()};switchClassBackward();}" class="translate-x-[-100px] text-white w-[50px] h-[50px] rounded-full bg-emerald-300 top-[550px] border-none absolute">上一张</button>
-      <button @click="()=>{if (pid!==null){togglePlay()};switchClassForward();}" class="translate-x-[100px] text-white w-[50px] h-[50px] rounded-full bg-emerald-300 top-[550px] border-none absolute">下一张</button>
+      <button @click="togglePlay"
+        class="text-white w-[50px] h-[50px] rounded-full bg-emerald-300 top-[550px] border-none absolute">{{ status
+        }}</button>
+      <button @click="() => { if (pid !== null) { togglePlay() }; _switchClassBackward(); }"
+        class="translate-x-[-100px] text-white w-[50px] h-[50px] rounded-full bg-emerald-300 top-[550px] border-none absolute">上一张</button>
+      <button @click="() => { if (pid !== null) { togglePlay() }; switchClassForward(); }"
+        class="translate-x-[100px] text-white w-[50px] h-[50px] rounded-full bg-emerald-300 top-[550px] border-none absolute">下一张</button>
     </div>
   </div>
 </template>
@@ -80,6 +88,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+
   perspective: 900px;
   transform-style: preserve-3d;
   perspective-origin: 50% 50%;
@@ -123,7 +132,7 @@ body {
 }
 
 @media screen and (max-width: 700px) {
-  #main{
+  #main {
     transform: scale(0.5);
   }
 }
