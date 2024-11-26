@@ -67,8 +67,44 @@ async function _onScroll(e: Event) {
     endIndex.value=Math.min(a+bufferLen,rawArr.length);
 }
 
+function throttle<T extends (...args: any[]) => void>(func: T, limit: number): (...args: Parameters<T>) => void {
+  let inThrottle: boolean | number;
+  return function(this: any, ...args: Parameters<T>) {
+    const context = this;
+    if (!inThrottle) {
+      func.apply(context, args);
+      inThrottle = true;
+      setTimeout(() => (inThrottle = false), limit);
+    } else {
+      cancelAnimationFrame(inThrottle as number);
+      inThrottle = requestAnimationFrame(() => {
+        func.apply(context, args);
+        setTimeout(() => (inThrottle = false), limit);
+      });
+    }
+  };
+}
+
+function anify(func:Function){
+    let lock=false;
+    let f=(...args:any[])=>{
+        if (lock){
+            return;
+        }
+
+        lock=true;
+        window.requestAnimationFrame(async () => {
+            await func(...args);
+            lock=false;
+        })
+    }
+    return f;
+}
+
 // 节流
-let onScroll = lodash._.throttle(_onScroll, 0.2, { leading: false, trailing: true })
+// let onScroll = lodash._.throttle(_onScroll, 0.2, { leading: false, trailing: true })
+// let onScroll=throttle(_onScroll,0.2);
+let onScroll=anify(_onScroll);
 
 // 用于渲染元素以获取高度
 const computeContent = ref("");
