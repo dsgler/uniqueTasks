@@ -1,0 +1,192 @@
+{
+  "type": "Program",
+  "start": 0,
+  "end": 72,
+  "body": [
+    {
+      "type": "VariableDeclaration",
+      "start": 0,
+      "end": 9,
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "start": 4,
+          "end": 9,
+          "id": {
+            "type": "Identifier",
+            "start": 4,
+            "end": 5,
+            "name": "a"
+          },
+          "init": {
+            "type": "BinaryExpression",
+            "start": 6,
+            "end": 9,
+            "left": {
+              "type": "Literal",
+              "start": 6,
+              "end": 7,
+              "value": 1,
+              "raw": "1"
+            },
+            "operator": "+",
+            "right": {
+              "type": "Literal",
+              "start": 8,
+              "end": 9,
+              "value": 1,
+              "raw": "1"
+            }
+          }
+        }
+      ],
+      "kind": "var"
+    },
+    {
+      "type": "ExpressionStatement",
+      "start": 10,
+      "end": 25,
+      "expression": {
+        "type": "AssignmentExpression",
+        "start": 10,
+        "end": 25,
+        "operator": "=",
+        "left": {
+          "type": "Identifier",
+          "start": 10,
+          "end": 11,
+          "name": "a"
+        },
+        "right": {
+          "type": "CallExpression",
+          "start": 12,
+          "end": 25,
+          "callee": {
+            "type": "MemberExpression",
+            "start": 12,
+            "end": 20,
+            "object": {
+              "type": "Identifier",
+              "start": 12,
+              "end": 16,
+              "name": "Math"
+            },
+            "property": {
+              "type": "Identifier",
+              "start": 17,
+              "end": 20,
+              "name": "add"
+            },
+            "computed": false
+          },
+          "arguments": [
+            {
+              "type": "BinaryExpression",
+              "start": 21,
+              "end": 24,
+              "left": {
+                "type": "Literal",
+                "start": 21,
+                "end": 22,
+                "value": 2,
+                "raw": "2"
+              },
+              "operator": "+",
+              "right": {
+                "type": "Literal",
+                "start": 23,
+                "end": 24,
+                "value": 1,
+                "raw": "1"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "FunctionDeclaration",
+      "start": 26,
+      "end": 72,
+      "id": {
+        "type": "Identifier",
+        "start": 35,
+        "end": 39,
+        "name": "func"
+      },
+      "expression": false,
+      "generator": false,
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "start": 41,
+        "end": 72,
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "start": 44,
+            "end": 51,
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "start": 48,
+                "end": 51,
+                "id": {
+                  "type": "Identifier",
+                  "start": 48,
+                  "end": 49,
+                  "name": "a"
+                },
+                "init": {
+                  "type": "Literal",
+                  "start": 50,
+                  "end": 51,
+                  "value": 2,
+                  "raw": "2"
+                }
+              }
+            ],
+            "kind": "var"
+          },
+          {
+            "type": "ExpressionStatement",
+            "start": 56,
+            "end": 70,
+            "expression": {
+              "type": "CallExpression",
+              "start": 56,
+              "end": 70,
+              "callee": {
+                "type": "MemberExpression",
+                "start": 56,
+                "end": 67,
+                "object": {
+                  "type": "Identifier",
+                  "start": 56,
+                  "end": 63,
+                  "name": "console"
+                },
+                "property": {
+                  "type": "Identifier",
+                  "start": 64,
+                  "end": 67,
+                  "name": "log"
+                },
+                "computed": false
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "start": 68,
+                  "end": 69,
+                  "name": "a"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "sourceType": "script"
+}
