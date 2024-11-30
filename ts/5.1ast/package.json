@@ -13,6 +13,7 @@
     "vite": "^6.0.1"
   },
   "dependencies": {
-    "acorn": "^8.14.0"
+    "acorn": "^8.14.0",
+    "esbuild": "^0.24.0"
   }
 }
