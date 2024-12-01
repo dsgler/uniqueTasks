@@ -21,7 +21,7 @@ function updateContent(){
   // console.log("???")
   inputcontent.innerHTML=ainput.value;
 }
-let de=lodash._.debounce(updateContent,1000);
+let de=lodash._.debounce(updateContent,1000,{leading:true,trailing:false});
 ainput.addEventListener("input",()=>{
   if (isDebounce.checked){
     de();

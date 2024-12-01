@@ -593,3 +593,107 @@ let pa = {
 };
 111;
 console.log(myStringify.resolveProgram(<any>pa));
+
+let paa={
+  "type": "Program",
+  "start": 0,
+  "end": 64,
+  "body": [
+    {
+      "type": "TryStatement",
+      "start": 0,
+      "end": 63,
+      "block": {
+        "type": "BlockStatement",
+        "start": 3,
+        "end": 9,
+        "body": [
+          {
+            "type": "ExpressionStatement",
+            "start": 6,
+            "end": 7,
+            "expression": {
+              "type": "Literal",
+              "start": 6,
+              "end": 7,
+              "value": 1,
+              "raw": "1"
+            }
+          }
+        ]
+      },
+      "handler": {
+        "type": "CatchClause",
+        "start": 9,
+        "end": 47,
+        "param": {
+          "type": "Identifier",
+          "start": 15,
+          "end": 16,
+          "name": "e"
+        },
+        "body": {
+          "type": "BlockStatement",
+          "start": 17,
+          "end": 47,
+          "body": [
+            {
+              "type": "ThrowStatement",
+              "start": 20,
+              "end": 45,
+              "argument": {
+                "type": "NewExpression",
+                "start": 26,
+                "end": 45,
+                "callee": {
+                  "type": "Identifier",
+                  "start": 30,
+                  "end": 35,
+                  "name": "Error"
+                },
+                "arguments": [
+                  {
+                    "type": "Literal",
+                    "start": 36,
+                    "end": 42,
+                    "value": "nmsl",
+                    "raw": "\"nmsl\""
+                  },
+                  {
+                    "type": "Literal",
+                    "start": 43,
+                    "end": 44,
+                    "value": 2,
+                    "raw": "2"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "finalizer": {
+        "type": "BlockStatement",
+        "start": 54,
+        "end": 63,
+        "body": [
+          {
+            "type": "ExpressionStatement",
+            "start": 57,
+            "end": 61,
+            "expression": {
+              "type": "Literal",
+              "start": 57,
+              "end": 61,
+              "value": 1312,
+              "raw": "1312"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "sourceType": "module"
+}
+
+console.log(myStringify.autoRs(<any>paa))

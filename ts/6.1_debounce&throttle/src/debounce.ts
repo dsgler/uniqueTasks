@@ -55,7 +55,7 @@ export namespace lodash {
           isCalledMoreThanOnce = true;
         } else {
           if (options.leading) {
-            console.log("leading " + Date.now());
+            // console.log("leading " + Date.now());
 
             func(...args);
           }
@@ -73,7 +73,7 @@ export namespace lodash {
           }
           ID_setTimeout = undefined;
           isCalledMoreThanOnce = false;
-          console.log("tail " + Date.now());
+          // console.log("tail " + Date.now());
         }, wait));
       };
 

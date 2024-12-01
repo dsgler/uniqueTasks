@@ -12,6 +12,8 @@ B_upload.addEventListener("click", async () => {
   let a = await f.arrayBuffer();
   let cnt = 50;
   let data = { fileBuffer: a, cnt };
+
+  // 手动修改实现不同的方法吧
   if (false) {
     let work = new Worker("/src/worker.ts");
     let t = Date.now();

@@ -211,5 +211,68 @@ export class myStringify {
   static resolveReturnStatement(d) {
     return `return ${this.autoRs(d.argument)}`;
   }
+  static resolveDebuggerStatement(d) {
+    return "debugger";
+  }
+  static resolveBreakStatement(d) {
+    return "break";
+  }
+  static resolveContinueStatement(d) {
+    return "continue";
+  }
+  static resolveSwitchStatement(d) {
+    let js = `switch (${this.autoRs(d.discriminant)}):{
+`;
+    for (let dd of d.cases) {
+      if (dd.test) {
+        js += `case ${dd.test}:
+`;
+      } else {
+        js += `default:
+`;
+      }
+      for (let ddd of dd.consequent) {
+        js += this.autoRs(ddd);
+        js += "\n";
+      }
+    }
+    js += "}";
+    return js;
+  }
+  static resolveTryStatement(d) {
+    let js = "try";
+    js += this.autoRs(d.block);
+    js += "catch(";
+    if (!d.handler) {
+      throw Error("try\u540E\u5FC5\u987B\u6709catch");
+    }
+    js += this.autoRs(d.handler.param);
+    js += ")";
+    js += this.autoRs(d.handler.body);
+    if (d.finalizer) {
+      js += "finally";
+      js += this.autoRs(d.finalizer);
+    }
+    return js;
+  }
+  static resolveThrowStatement(d) {
+    return `throw ${this.autoRs(d.argument)}`;
+  }
+  static resolveNewExpression(d) {
+    let js = "new ";
+    js += this.autoRs(d.callee);
+    js += "(";
+    let isFirst = true;
+    for (let dd of d.arguments) {
+      if (isFirst) {
+        isFirst = false;
+      } else {
+        js += ",";
+      }
+      js += this.autoRs(dd);
+    }
+    js += ")";
+    return js;
+  }
 }
 //# sourceMappingURL=myStringify.js.map
